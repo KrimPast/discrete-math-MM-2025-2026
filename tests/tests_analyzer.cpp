@@ -8,6 +8,7 @@ namespace analyzer_tests {
         test_unidirected_amount_vertexes();
         test_undirected_local_clustering_coefficient();
         test_directed_local_clustering_coefficient();
+        test_amount_closed_triplets();
         test_CSC_and_fraction_equality();
         test_CC_and_fraction_equality();
     }
@@ -67,6 +68,27 @@ namespace analyzer_tests {
         assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 5.0 / 6);
         g.insert(4, 2);
         assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 6.0 / 6);
+    }
+
+    void test_amount_closed_triplets() {
+        graph g;
+        g.type = Undirected;
+        g.insert(1, 2);
+        g.insert(1, 5);
+        g.insert(2, 5);
+
+        g.insert(2, 3);
+        g.insert(3, 4);
+        g.insert(2, 4);
+
+        g.insert(2, 6);
+        g.insert(6, 7);
+        vector<int> results;
+        for (int i = 1; i <= 7; i++)
+            results.push_back(graph_analyzer(g).get_amount_of_closed_triplets(i));
+
+        vector<int> solution = {1, 2, 1, 1, 1, 0, 0};
+        assert(results == solution);
     }
 
     void test_CSC_and_fraction_equality(){
