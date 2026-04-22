@@ -27,6 +27,10 @@ public:
     double get_fraction_of_vertexes_in_max_SCC();
 
     double get_local_clustering_coefficient(int v);
+    double get_global_clustering_coefficient(int v);
+
+    size_t get_amount_of_closed_triplets(int v);
+    size_t get_open_triplets(int v);
 private:
     // For searching connected components
     unordered_map<int, int> CC_comp_id;
@@ -42,6 +46,8 @@ private:
     void SCC_dfs1(int v);
     void SCC_dfs2(int v);
 
+    // For measuring global clustering coefficient
+    size_t get_amount_of_closed_triplets(int v, vector<int>& neighbourhood);
 };
 
 #endif // ANALYZERS_H

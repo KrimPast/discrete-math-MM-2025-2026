@@ -34,22 +34,19 @@ double graph_analyzer::get_local_clustering_coefficient(int v) {
     if (g.type == Undefined) {
         throw runtime_error("get_local_clustering_coefficient: Cannot on undefined graph!\n");
     }
-    set<int> neighbourhood(g[v].begin(), g[v].end());
+    set<int> neighbourhood_set(g[v].begin(), g[v].end());
 
     if (g.type == Directed) {
         if (rg.empty()) rg = g.get_reversed_graph();
-        neighbourhood.insert(rg[v].begin(), rg[v].end());
+        neighbourhood_set.insert(rg[v].begin(), rg[v].end());
     }
+    vector<int> neighbourhood_list(neighbourhood_set.begin(), neighbourhood_set.end());
+    neighbourhood_set.clear();
 
-    size_t count = 0;
-    for (auto j : neighbourhood) {
-        for (auto k : neighbourhood) {
-            if (j == k) continue;
-            if (ranges::find(g[j], k) != g[j].end())
-                ++count;
-        }
-    }
-    size_t neighbours = neighbourhood.size();
+    size_t count = get_amount_of_closed_triplets(v, neighbourhood_list);
+    if (g.type == Undirected) count *= 2;
+
+    size_t neighbours = neighbourhood_list.size();
     size_t max_count = neighbours * (neighbours - 1);
     return (double)count / (double) max_count;
 }
@@ -124,6 +121,25 @@ void graph_analyzer::SCC_dfs2(int v) {
     for (auto o : rg[v])
         if (!SCC_visited[o])
             SCC_dfs2(o);
+}
+
+size_t graph_analyzer::get_amount_of_closed_triplets(int v, vector<int>& neighbourhood){
+    size_t count = 0;
+    for (int j = 0; j < neighbourhood.size(); j++) {
+        size_t k_start = g.type == Undirected ? j + 1 : 0;
+        for (int k = k_start; k < neighbourhood.size(); k++) {
+            int second = neighbourhood[j];
+            int third = neighbourhood[k];
+            if (ranges::find(g[second], third) != g[second].end()) {
+                ++count;
+            }
+        }
+    }
+    return count;
+}
+size_t graph_analyzer::get_amount_of_closed_triplets(int v){
+    vector<int> neighbourhood(g[v].begin(), g[v].end());
+    return get_amount_of_closed_triplets(v, neighbourhood);
 }
 
 set<set<int>> graph_analyzer::get_SCCs() {
