@@ -20,9 +20,8 @@ public:
     void remove(int from, int to);
 
     set<int> get_vertexes() const;
-    graph get_reversed_graph();
+    graph get_reversed_graph() const;
     void calculate_vertexes();
-    void calculate_edges();
 };
 
 #endif //GRAPH_H

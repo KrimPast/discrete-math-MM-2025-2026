@@ -31,7 +31,7 @@ set<int> graph::get_vertexes() const {
     return vertexes;
 }
 
-graph graph::get_reversed_graph() {
+graph graph::get_reversed_graph() const {
     if (type == Undirected) {
         throw runtime_error("get_reversed_graph: You sure that you really need RG by undirected graph?");
     } else if (type == Undefined) {

@@ -30,6 +30,27 @@ double graph_analyzer::get_fraction_of_vertexes_in_max_SCC() {
     return (double)mx / (double)g.size();
 }
 
+double graph_analyzer::get_local_clustering_coefficient(int v) {
+    if (g.type == Undirected) {
+        auto neighbourhood_list = g[v]; // taking by value here is important
+        set<int> neighbourhood_set = set<int>();
+        for (auto j : neighbourhood_list) neighbourhood_set.insert(j);
+        neighbourhood_list.clear();
+
+        size_t count = 0;
+        for (auto j : neighbourhood_set) {
+            for (auto k : g[j]) {
+                if (neighbourhood_set.contains(k))
+                    ++count;
+            }
+        }
+        int neighbours = neighbourhood_set.size();
+        size_t max_count = neighbours * (neighbours - 1);
+        return (double)count / max_count;
+    }
+    return -1;
+}
+
 // CC means Connected Components
 void graph_analyzer::CC_undirected_dfs(int v) {
     for (auto o : g[v]) {

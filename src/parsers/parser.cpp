@@ -2,7 +2,6 @@
 #include <iostream>
 #include <stdexcept>
 
-
 #include "parser.h"
 #include "../general.h"
 

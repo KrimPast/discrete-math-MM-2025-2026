@@ -25,6 +25,8 @@ public:
 
     double get_fraction_of_vertexes_in_max_CC();
     double get_fraction_of_vertexes_in_max_SCC();
+
+    double get_local_clustering_coefficient(int v);
 private:
     // For searching connected components
     unordered_map<int, int> CC_comp_id;
