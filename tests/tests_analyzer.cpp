@@ -7,6 +7,7 @@ namespace analyzer_tests {
     void tests() {
         test_unidirected_amount_vertexes();
         test_undirected_local_clustering_coefficient();
+        test_directed_local_clustering_coefficient();
         test_CSC_and_fraction_equality();
         test_CC_and_fraction_equality();
     }
@@ -44,6 +45,28 @@ namespace analyzer_tests {
         assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 2.0 / 3);
         g.insert(3, 4);
         assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 1);
+    }
+
+    void test_directed_local_clustering_coefficient() {
+        graph g;
+        g.type = Directed;
+        g.insert(1, 2);
+        g.insert(1, 3);
+        g.insert(4, 1);
+
+        assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 0);
+        g.insert(3, 2);
+        assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 1.0 / 6);
+        g.insert(2, 3);
+        assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 2.0 / 6);
+        g.insert(4, 3);
+        assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 3.0 / 6);
+        g.insert(3, 4);
+        assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 4.0 / 6);
+        g.insert(2, 4);
+        assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 5.0 / 6);
+        g.insert(4, 2);
+        assert(graph_analyzer(g).get_local_clustering_coefficient(1) == 6.0 / 6);
     }
 
     void test_CSC_and_fraction_equality(){

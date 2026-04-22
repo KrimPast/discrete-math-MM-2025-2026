@@ -31,24 +31,27 @@ double graph_analyzer::get_fraction_of_vertexes_in_max_SCC() {
 }
 
 double graph_analyzer::get_local_clustering_coefficient(int v) {
-    if (g.type == Undirected) {
-        auto neighbourhood_list = g[v]; // taking by value here is important
-        set<int> neighbourhood_set = set<int>();
-        for (auto j : neighbourhood_list) neighbourhood_set.insert(j);
-        neighbourhood_list.clear();
-
-        size_t count = 0;
-        for (auto j : neighbourhood_set) {
-            for (auto k : g[j]) {
-                if (neighbourhood_set.contains(k))
-                    ++count;
-            }
-        }
-        int neighbours = neighbourhood_set.size();
-        size_t max_count = neighbours * (neighbours - 1);
-        return (double)count / max_count;
+    if (g.type == Undefined) {
+        throw runtime_error("get_local_clustering_coefficient: Cannot on undefined graph!\n");
     }
-    return -1;
+    set<int> neighbourhood(g[v].begin(), g[v].end());
+
+    if (g.type == Directed) {
+        if (rg.empty()) rg = g.get_reversed_graph();
+        neighbourhood.insert(rg[v].begin(), rg[v].end());
+    }
+
+    size_t count = 0;
+    for (auto j : neighbourhood) {
+        for (auto k : neighbourhood) {
+            if (j == k) continue;
+            if (ranges::find(g[j], k) != g[j].end())
+                ++count;
+        }
+    }
+    size_t neighbours = neighbourhood.size();
+    size_t max_count = neighbours * (neighbours - 1);
+    return (double)count / (double) max_count;
 }
 
 // CC means Connected Components
