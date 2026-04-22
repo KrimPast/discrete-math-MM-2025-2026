@@ -48,7 +48,28 @@ double graph_analyzer::get_local_clustering_coefficient(int v) {
 
     size_t neighbours = neighbourhood_list.size();
     size_t max_count = neighbours * (neighbours - 1);
+    if (max_count == 0) return 0; // means vertex doesn't have third neighbour
     return (double)count / (double) max_count;
+}
+
+double graph_analyzer::get_global_clustering_coefficient() {
+    size_t opened_triplets = get_amount_of_opened_triplets();
+    size_t closed_triplets = get_amount_of_closed_triplets();
+    size_t triplets = opened_triplets + closed_triplets;
+    return (double)closed_triplets / (double)triplets;
+}
+
+double graph_analyzer::get_average_clustering_coefficient() {
+    double amount = 0;
+    auto vertexes = g.get_vertexes();
+    for (auto v : vertexes) {
+        amount += get_local_clustering_coefficient(v);
+    }
+    return amount / vertexes.size();
+}
+
+size_t graph_analyzer::get_amount_of_triangles() {
+    return get_amount_of_closed_triplets() * 3;
 }
 
 // CC means Connected Components
@@ -123,6 +144,42 @@ void graph_analyzer::SCC_dfs2(int v) {
             SCC_dfs2(o);
 }
 
+size_t graph_analyzer::get_amount_of_opened_triplets() {
+    size_t amount = 0;
+    auto vertexes = g.get_vertexes();
+    for (auto v : vertexes) {
+        amount += get_amount_of_opened_triplets(v);
+    }
+    return amount;
+}
+
+size_t graph_analyzer::get_amount_of_opened_triplets(int v) {
+    vector<int>& neighbourhood = g[v];
+    size_t count = 0;
+    for (auto second : neighbourhood) {
+        for (auto third : g[second]) {
+            if (v == third) continue;
+            if (ranges::find(g[v], third) == g[v].end()) {
+                ++count;
+            }
+        }
+    }
+    return count;
+}
+
+size_t graph_analyzer::get_amount_of_closed_triplets() {
+    size_t amount = 0;
+    auto vertexes = g.get_vertexes();
+    for (auto v : vertexes) {
+        amount += get_amount_of_closed_triplets(v);
+    }
+    return amount;
+}
+
+size_t graph_analyzer::get_amount_of_closed_triplets(int v){
+    vector<int>& neighbourhood = g[v];
+    return get_amount_of_closed_triplets(v, neighbourhood);
+}
 size_t graph_analyzer::get_amount_of_closed_triplets(int v, vector<int>& neighbourhood){
     size_t count = 0;
     for (int j = 0; j < neighbourhood.size(); j++) {
@@ -136,10 +193,6 @@ size_t graph_analyzer::get_amount_of_closed_triplets(int v, vector<int>& neighbo
         }
     }
     return count;
-}
-size_t graph_analyzer::get_amount_of_closed_triplets(int v){
-    vector<int> neighbourhood(g[v].begin(), g[v].end());
-    return get_amount_of_closed_triplets(v, neighbourhood);
 }
 
 set<set<int>> graph_analyzer::get_SCCs() {
