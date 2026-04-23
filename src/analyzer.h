@@ -2,6 +2,7 @@
 #define ANALYZERS_H
 
 #include <vector>
+#include <cmath>
 
 #include "general.h"
 #include "graph.h"
@@ -37,6 +38,14 @@ public:
 
     size_t get_amount_of_closed_triplets() const;
     size_t get_amount_of_closed_triplets(int v) const;
+
+    size_t get_degree(int v) const;
+    size_t get_min_degree() const;
+    size_t get_max_degree() const;
+    double get_average_degree() const;
+
+    double get_probability_that_random_vertex_has_some_degree(size_t degree);
+    double get_probability_that_random_vertex_has_some_degree_log_log(size_t log2_degree);
 private:
     // For searching connected components
     unordered_map<int, int> CC_comp_id;
@@ -54,6 +63,10 @@ private:
 
     // For measuring global clustering coefficient
     size_t get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const;
+
+    // For measuring probabilities function of degrees
+    unordered_map<int, size_t> degrees_counter;
+    void init_degree_counters_cache();
 };
 
 #endif // ANALYZERS_H

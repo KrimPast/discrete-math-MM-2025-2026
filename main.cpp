@@ -17,6 +17,6 @@ void parse_example() {
 }
 int main() {
      analyzer_tests::tests();
-     parse_example();
+     // parse_example();
      return 0;
 }

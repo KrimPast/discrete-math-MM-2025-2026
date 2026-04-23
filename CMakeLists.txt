@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 4.2)
-#find_package(Boost REQUIRED)
-#include_directories(${Boost_INCLUDE_DIRS})
+find_package(Boost REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
 
 project(discrete_math_MM_2025_2026)
 

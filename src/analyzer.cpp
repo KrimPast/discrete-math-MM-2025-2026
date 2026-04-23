@@ -48,7 +48,7 @@ double graph_analyzer::get_local_clustering_coefficient(int v) {
 
     size_t neighbours = neighbourhood_list.size();
     size_t max_count = neighbours * (neighbours - 1);
-    if (max_count == 0) return 0; // means vertex doesn't have third neighbour
+    if (max_count == 0) return 0; // means vertex doesn't have third neighbor
     return (double)count / (double) max_count;
 }
 
@@ -180,6 +180,66 @@ size_t graph_analyzer::get_amount_of_closed_triplets(int v) const {
     vector<int>& neighbourhood = g[v];
     return get_amount_of_closed_triplets(v, neighbourhood);
 }
+
+size_t graph_analyzer::get_degree(int v) const {
+    if (g.type == Undirected) {
+        if (!g.contains(v)) throw runtime_error("get_degree: No such vertex in graph");
+        return g[v].size() + (ranges::find(g[v], v) != g[v].end() ? 1 : 0); // reflexive adds two to degree
+    }
+    throw runtime_error("get_degree: Not implemented for graphs this type");
+}
+
+size_t graph_analyzer::get_min_degree() const {
+    auto vertexes = g.get_vertexes();
+    size_t mn = g.amount_edges;
+    for (auto v : vertexes) {
+        mn = min(mn, get_degree(v));
+    }
+    return mn;
+}
+
+size_t graph_analyzer::get_max_degree() const {
+    auto vertexes = g.get_vertexes();
+    size_t mx = 0;
+    for (auto v : vertexes) {
+        mx = max(mx, get_degree(v));
+    }
+    return mx;
+}
+
+double graph_analyzer::get_average_degree() const {
+    auto vertexes = g.get_vertexes();
+    size_t sm = 0;
+    for (auto v : vertexes) {
+        sm += get_degree(v);
+    }
+    g.calculate_amount_of_vertexes();
+    return (double)sm / (double)g.amount_vertexes;
+}
+
+// Function return probability, which enters in [0, 1], what means random vertex has degree, which equals input degree
+double graph_analyzer::get_probability_that_random_vertex_has_some_degree(size_t degree) {
+    if (degrees_counter.empty()) init_degree_counters_cache();
+    if (g.amount_vertexes == 0) g.calculate_amount_of_vertexes();
+
+    return (double)degrees_counter[degree] / (double)g.amount_vertexes;
+}
+
+// Function returns log2(probability), which enters in (-infinity, 0], what means random vertex has degree, which enters in...
+// ... [2 ^ log2_degree,  2 ^ (log2_degree + 1) )
+double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_log(size_t log2_degree) {
+    if (degrees_counter.empty()) init_degree_counters_cache();
+    if (g.amount_vertexes == 0) g.calculate_amount_of_vertexes();
+
+    size_t min_degree = __builtin_powl(2, log2_degree);
+    size_t max_degree = min_degree * 2;
+    size_t amount = 0;
+    for (size_t degree = min_degree; degree < max_degree; degree++) {
+        amount += degrees_counter[degree];
+    }
+    return std::log2(amount / (double)g.amount_vertexes);
+}
+
 size_t graph_analyzer::get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const {
     size_t count = 0;
     for (int j = 0; j < neighbourhood.size(); j++) {
@@ -193,6 +253,15 @@ size_t graph_analyzer::get_amount_of_closed_triplets(int v, const vector<int>& n
         }
     }
     return count;
+}
+
+void graph_analyzer::init_degree_counters_cache() {
+    degrees_counter.clear();
+    auto vertexes = g.get_vertexes();
+    for (auto v : vertexes) {
+        size_t degree = get_degree(v);
+        ++degrees_counter[degree];
+    }
 }
 
 set<set<int>> graph_analyzer::get_SCCs() {

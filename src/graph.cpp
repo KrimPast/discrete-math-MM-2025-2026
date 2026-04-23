@@ -4,7 +4,7 @@
 
 void graph::insert(const int from, const int to) {
     (*this)[from].push_back(to);
-    if (type == Undirected) {
+    if (type == Undirected && from != to) {
         (*this)[to].push_back(from);
     }
     ++amount_edges;
@@ -13,7 +13,7 @@ void graph::remove(const int from, const int to) {
     if (!contains(from)) return;
 
     std::erase((*this)[from], to);
-    if (type == Undirected) {
+    if (type == Undirected && from != to) {
         std::erase((*this)[to], from);
     }
     --amount_edges;

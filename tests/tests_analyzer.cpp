@@ -10,6 +10,7 @@ namespace analyzer_tests {
         test_directed_local_clustering_coefficient();
         test_amount_opened_triplets();
         test_amount_closed_triplets();
+        test_vertex_degrees();
         test_CSC_and_fraction_equality();
         test_CC_and_fraction_equality();
     }
@@ -33,7 +34,6 @@ namespace analyzer_tests {
             assert(g.amount_edges == 2);
         }
     }
-
     void test_undirected_local_clustering_coefficient() {
         graph g;
         g.type = Undirected;
@@ -106,6 +106,40 @@ namespace analyzer_tests {
 
         vector<size_t> solution = {1, 2, 1, 1, 1, 0, 0};
         assert(results == solution);
+    }
+
+    void test_vertex_degrees() {
+        graph g;
+        g.type = Undirected;
+        vector<pair<int, int>> edges = {
+            {1, 2}, {2, 3}, {3, 4},
+            {4, 5}, {5, 6}, {2, 6},
+            {3, 5}, {5, 5}
+        };
+        for (auto edge : edges)
+            g.insert(edge.first, edge.second);
+
+        vector<int> results;
+        graph_analyzer analyzer(g);
+        for (int i = 1; i <= 6; i++)
+            results.push_back(analyzer.get_degree(i));
+        vector<int> solution = {1, 3, 3, 2, 5, 2};
+        assert(solution == results);
+        assert(analyzer.get_min_degree() == 1);
+        assert(analyzer.get_max_degree() == 5);
+        assert(analyzer.get_average_degree() == 16.0 / 6);
+
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree(1) == 1.0 / 6);
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree(2) == 2.0 / 6);
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree(3) == 2.0 / 6);
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree(4) == 0);
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree(5) == 1.0 / 6);
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree(6) == 0);
+
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree_log_log(0) == log2(1.0/6)); // [1, 2)
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree_log_log(1) == log2(4.0/6)); // [2, 4)
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree_log_log(2) == log2(1.0/6)); // [4, 8)
+        assert(analyzer.get_probability_that_random_vertex_has_some_degree_log_log(3) == -INFINITY); // [8, 16)
     }
 
     void test_CSC_and_fraction_equality(){
