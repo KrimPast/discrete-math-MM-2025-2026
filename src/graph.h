@@ -3,7 +3,6 @@
 
 #include <set>
 #include <unordered_map>
-#include <unordered_set>
 #include <vector>
 
 #include "general.h"
@@ -21,7 +20,7 @@ public:
 
     set<int> get_vertexes() const;
     graph get_reversed_graph() const;
-    void calculate_vertexes();
+    void calculate_amount_of_vertexes();
 };
 
 #endif //GRAPH_H

@@ -23,12 +23,12 @@ namespace analyzer_tests {
             assert(g.amount_edges == 0);
 
             g.insert(1, 2);
-            g.calculate_vertexes();
+            g.calculate_amount_of_vertexes();
             assert(g.amount_vertexes == 2);
             assert(g.amount_edges == 1);
 
             g.insert(2, 3);
-            g.calculate_vertexes();
+            g.calculate_amount_of_vertexes();
             assert(g.amount_vertexes == 3);
             assert(g.amount_edges == 2);
         }
@@ -80,11 +80,11 @@ namespace analyzer_tests {
         };
         for (auto p : edges)
             g.insert(p.first, p.second);
-        vector<int> results;
+        vector<size_t> results;
         for (int i = 1; i <= 6; i++) {
             results.push_back(graph_analyzer(g).get_amount_of_opened_triplets(i));
         }
-        vector<int> solution = {2, 2, 2, 3, 2, 3};
+        vector<size_t> solution = {2, 2, 2, 3, 2, 3};
         assert(results == solution);
     }
     void test_amount_closed_triplets() {
@@ -100,11 +100,11 @@ namespace analyzer_tests {
 
         g.insert(2, 6);
         g.insert(6, 7);
-        vector<int> results;
+        vector<size_t> results;
         for (int i = 1; i <= 7; i++)
             results.push_back(graph_analyzer(g).get_amount_of_closed_triplets(i));
 
-        vector<int> solution = {1, 2, 1, 1, 1, 0, 0};
+        vector<size_t> solution = {1, 2, 1, 1, 1, 0, 0};
         assert(results == solution);
     }
 

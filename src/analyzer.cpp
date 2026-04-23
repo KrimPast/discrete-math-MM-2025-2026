@@ -52,7 +52,7 @@ double graph_analyzer::get_local_clustering_coefficient(int v) {
     return (double)count / (double) max_count;
 }
 
-double graph_analyzer::get_global_clustering_coefficient() {
+double graph_analyzer::get_global_clustering_coefficient() const {
     size_t opened_triplets = get_amount_of_opened_triplets();
     size_t closed_triplets = get_amount_of_closed_triplets();
     size_t triplets = opened_triplets + closed_triplets;
@@ -65,10 +65,10 @@ double graph_analyzer::get_average_clustering_coefficient() {
     for (auto v : vertexes) {
         amount += get_local_clustering_coefficient(v);
     }
-    return amount / vertexes.size();
+    return amount / (double) vertexes.size();
 }
 
-size_t graph_analyzer::get_amount_of_triangles() {
+size_t graph_analyzer::get_amount_of_triangles() const {
     return get_amount_of_closed_triplets() * 3;
 }
 
@@ -91,7 +91,7 @@ void graph_analyzer::CC_directed_dfs(int v) {
 set<set<int>> graph_analyzer::get_CCs() {
     auto v_list = g.get_vertexes();
 
-    g.calculate_vertexes();
+    g.calculate_amount_of_vertexes();
     CC_comp_id.reserve(g.amount_vertexes);
     for (auto v : v_list) CC_comp_id[v] = -1;
 
@@ -144,7 +144,7 @@ void graph_analyzer::SCC_dfs2(int v) {
             SCC_dfs2(o);
 }
 
-size_t graph_analyzer::get_amount_of_opened_triplets() {
+size_t graph_analyzer::get_amount_of_opened_triplets() const {
     size_t amount = 0;
     auto vertexes = g.get_vertexes();
     for (auto v : vertexes) {
@@ -153,7 +153,7 @@ size_t graph_analyzer::get_amount_of_opened_triplets() {
     return amount;
 }
 
-size_t graph_analyzer::get_amount_of_opened_triplets(int v) {
+size_t graph_analyzer::get_amount_of_opened_triplets(int v) const {
     vector<int>& neighbourhood = g[v];
     size_t count = 0;
     for (auto second : neighbourhood) {
@@ -167,7 +167,7 @@ size_t graph_analyzer::get_amount_of_opened_triplets(int v) {
     return count;
 }
 
-size_t graph_analyzer::get_amount_of_closed_triplets() {
+size_t graph_analyzer::get_amount_of_closed_triplets() const {
     size_t amount = 0;
     auto vertexes = g.get_vertexes();
     for (auto v : vertexes) {
@@ -176,15 +176,15 @@ size_t graph_analyzer::get_amount_of_closed_triplets() {
     return amount;
 }
 
-size_t graph_analyzer::get_amount_of_closed_triplets(int v){
+size_t graph_analyzer::get_amount_of_closed_triplets(int v) const {
     vector<int>& neighbourhood = g[v];
     return get_amount_of_closed_triplets(v, neighbourhood);
 }
-size_t graph_analyzer::get_amount_of_closed_triplets(int v, vector<int>& neighbourhood){
+size_t graph_analyzer::get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const {
     size_t count = 0;
     for (int j = 0; j < neighbourhood.size(); j++) {
         size_t k_start = g.type == Undirected ? j + 1 : 0;
-        for (int k = k_start; k < neighbourhood.size(); k++) {
+        for (size_t k = k_start; k < neighbourhood.size(); k++) {
             int second = neighbourhood[j];
             int third = neighbourhood[k];
             if (ranges::find(g[second], third) != g[second].end()) {

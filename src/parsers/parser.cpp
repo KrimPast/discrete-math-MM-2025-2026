@@ -85,6 +85,9 @@ void mtx_parser::process(graph& graph, string& line) {
 
 graph uni_parser::parse(const string &file_path) {
     filesystem::path f = file_path;
+    if (!filesystem::exists(file_path)) {
+        throw runtime_error("File is not exist");
+    }
     string ext = f.extension();
     graph g;
     if (ext == ".mtx")
@@ -106,7 +109,7 @@ graph uni_parser::parse(const string &file_path) {
         throw runtime_error("Cannot identify type of graph. You must install it manually!\n");
     }
 
-    if (g.amount_vertexes == 0) g.calculate_vertexes();
+    if (g.amount_vertexes == 0) g.calculate_amount_of_vertexes();
 
     return g;
 }

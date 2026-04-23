@@ -51,7 +51,7 @@ graph graph::get_reversed_graph() const {
     return rg;
 }
 
-void graph::calculate_vertexes() {
+void graph::calculate_amount_of_vertexes() {
     if (type == Undirected) {
         amount_vertexes = size();
     }
@@ -62,16 +62,3 @@ void graph::calculate_vertexes() {
         throw runtime_error("calculate_vertexes: Invalid graph type");
     }
 }
-
-// void graph::calculate_edges() {
-//     if (type == Undefined) {
-//         throw runtime_error("calculate_edges: Cannot count amount of edges, because graph type is Undefined");
-//     }
-//     amount_edges = 0;
-//     for (auto &edges_list : *this) {
-//         amount_edges += edges_list.second.size();
-//     }
-//     if (type == Undirected) {
-//         amount_edges /= 2;
-//     }
-// }
