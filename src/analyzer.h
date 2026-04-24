@@ -18,8 +18,8 @@ public:
 
     // CC means Connected Components
     // CSC means Strongly Connected Components
-    set<set<int>> get_CCs();
-    set<set<int>> get_SCCs();
+    vector<set<int>> get_CCs();
+    vector<set<int>> get_SCCs();
 
     size_t get_amount_of_CC();
     size_t get_amount_of_SCC();

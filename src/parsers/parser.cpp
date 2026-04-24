@@ -26,7 +26,7 @@ graph parser::parse(const string &file_path) {
                         g.insert(new_edge.first, new_edge.second);
                     break;
                 }
-                case ParseMetadata:
+                case TryParseMetadata:
                 {
                     if (metadata != null_edge) {
                         cerr << "(warning) parse: Double metadata in one file!" << endl;
@@ -65,7 +65,7 @@ edge parser::try_parse_edge(string &line) const {
 // (Start) Section "What we do with it"
 process_action txt_parser::whatWeDoWithIt(string &line) const {
     if ((line[0] == '#' && line_index == 2) || (line[0] != '#' && line_index == 0)) {
-        return ParseMetadata;
+        return TryParseMetadata;
     }
     if (line[0] == '#') return DoNothing;
     return TryParseEdge;
@@ -78,7 +78,7 @@ process_action csv_parser::whatWeDoWithIt(string &line) const {
 
 process_action mtx_parser::whatWeDoWithIt(string &line) const {
     if (line_index == 0) return DoNothing;
-    else if (line_index == 1) return ParseMetadata;
+    else if (line_index == 1) return TryParseMetadata;
     return TryParseEdge;
 }
 // (End) Section "What we do with it"

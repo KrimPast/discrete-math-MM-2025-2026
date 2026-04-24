@@ -23,8 +23,6 @@ protected:
 private:
     unordered_map<int, int> edgesOfVertex;
 
-    virtual edge process(graph& graph, string& line) { return edge{0, 0}; }
-
     virtual process_action whatWeDoWithIt(string& line) const = 0;
     virtual edge try_parse_metadata(string& line) const = 0;
     edge try_parse_edge(string& line) const;

@@ -157,7 +157,8 @@ namespace analyzer_tests {
         graph_analyzer analyzer(g);
         auto output = analyzer.get_SCCs();
         auto fraction = analyzer.get_fraction_of_vertexes_in_max_SCC();
-        set<set<int>> solution = {{1, 2, 3}, {5, 6}, {9, 10}, {4}, {7}, {8}};
+        sort(output.begin(), output.end(), other::set_greater); // sort by set.size() and first element
+        vector<set<int>> solution = {{1, 2, 3}, {5, 6}, {9, 10}, {4}, {7}, {8}};
         assert(output == solution);
         assert(fraction == 0.3);
     }
@@ -176,7 +177,8 @@ namespace analyzer_tests {
             graph_analyzer analyzer(g);
             auto output = analyzer.get_CCs();
             auto fraction = analyzer.get_fraction_of_vertexes_in_max_CC();
-            set<set<int>> solution = {{1, 2, 3, 4}, {5, 6}, {7, 8}};
+            sort(output.begin(), output.end(), other::set_greater); // sort by set.size() and first element
+            vector<set<int>> solution = {{1, 2, 3, 4}, {5, 6}, {7, 8}};
             assert(output == solution);
             assert(fraction == 0.5);
         }

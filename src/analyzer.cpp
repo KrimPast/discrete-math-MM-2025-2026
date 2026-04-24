@@ -88,7 +88,7 @@ void graph_analyzer::CC_directed_dfs(int v) {
         CC_directed_dfs(o);
     }
 }
-set<set<int>> graph_analyzer::get_CCs() {
+vector<set<int>> graph_analyzer::get_CCs() {
     auto v_list = g.get_vertexes();
 
     g.calculate_amount_of_vertexes();
@@ -119,16 +119,12 @@ set<set<int>> graph_analyzer::get_CCs() {
     for (auto v : v_list) {
         components_list[CC_comp_id[v]].insert(v);
     }
-    auto components_set = set<set<int>>();
-    for (auto& comp : components_list) {
-        components_set.insert(comp);
-    }
-    components_list.clear();
     CC_comp_id.clear();
-    return components_set;
+    return components_list;
 }
 
-set<set<int>> graph_analyzer::get_SCCs() {
+vector<set<int>> graph_analyzer::get_SCCs() {
+    if (g.type != Directed) throw runtime_error("get_SCCs: SCCs exists only in directed graph!");
     auto v_list = g.get_vertexes();
     if (rg.empty()) rg = g.get_reversed();
     for (auto v : v_list) {
@@ -136,13 +132,13 @@ set<set<int>> graph_analyzer::get_SCCs() {
             SCC_dfs1(v);
     }
     SCC_visited.clear();
-    auto components = set<set<int>>();
+    auto components = vector<set<int>>();
     size_t n = SCC_order.size();
     for (int i = 0; i < n; i++) {
         int v = SCC_order[n - i - 1];
         if (!SCC_visited[v]) {
             SCC_dfs2(v);
-            components.insert(SCC_component);
+            components.push_back(SCC_component);
             SCC_component.clear();
         }
     }
@@ -202,6 +198,20 @@ size_t graph_analyzer::get_amount_of_closed_triplets() const {
 size_t graph_analyzer::get_amount_of_closed_triplets(int v) const {
     vector<int>& neighbourhood = g[v];
     return get_amount_of_closed_triplets(v, neighbourhood);
+}
+size_t graph_analyzer::get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const {
+    size_t count = 0;
+    for (int j = 0; j < neighbourhood.size(); j++) {
+        size_t k_start = g.type == Undirected ? j + 1 : 0;
+        for (size_t k = k_start; k < neighbourhood.size(); k++) {
+            int second = neighbourhood[j];
+            int third = neighbourhood[k];
+            if (ranges::find(g[second], third) != g[second].end()) {
+                ++count;
+            }
+        }
+    }
+    return count;
 }
 
 size_t graph_analyzer::get_degree(int v) const {
@@ -263,20 +273,7 @@ double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_lo
     return std::log2((double) amount / (double)g.amount_vertexes);
 }
 
-size_t graph_analyzer::get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const {
-    size_t count = 0;
-    for (int j = 0; j < neighbourhood.size(); j++) {
-        size_t k_start = g.type == Undirected ? j + 1 : 0;
-        for (size_t k = k_start; k < neighbourhood.size(); k++) {
-            int second = neighbourhood[j];
-            int third = neighbourhood[k];
-            if (ranges::find(g[second], third) != g[second].end()) {
-                ++count;
-            }
-        }
-    }
-    return count;
-}
+
 
 void graph_analyzer::init_degree_counters_cache() {
     degrees_counter.clear();

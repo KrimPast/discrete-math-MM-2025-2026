@@ -14,5 +14,7 @@ add_executable(discrete_math_MM_2025_2026 main.cpp
         src/general.h
         src/analyzer.cpp
         src/analyzer.h
+        src/other/other.cpp
+        src/other/other.h
         tests/tests_analyzer.cpp
         tests/tests_analyzer.h)
