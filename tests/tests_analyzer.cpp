@@ -119,11 +119,11 @@ namespace analyzer_tests {
         for (auto edge : edges)
             g.insert(edge.first, edge.second);
 
-        vector<int> results;
+        vector<size_t> results;
         graph_analyzer analyzer(g);
         for (int i = 1; i <= 6; i++)
             results.push_back(analyzer.get_degree(i));
-        vector<int> solution = {1, 3, 3, 2, 5, 2};
+        vector<size_t> solution = {1, 3, 3, 2, 5, 2};
         assert(solution == results);
         assert(analyzer.get_min_degree() == 1);
         assert(analyzer.get_max_degree() == 5);

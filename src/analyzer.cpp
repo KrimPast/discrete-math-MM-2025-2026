@@ -37,7 +37,7 @@ double graph_analyzer::get_local_clustering_coefficient(int v) {
     set<int> neighbourhood_set(g[v].begin(), g[v].end());
 
     if (g.type == Directed) {
-        if (rg.empty()) rg = g.get_reversed_graph();
+        if (rg.empty()) rg = g.get_reversed();
         neighbourhood_set.insert(rg[v].begin(), rg[v].end());
     }
     vector<int> neighbourhood_list(neighbourhood_set.begin(), neighbourhood_set.end());
@@ -106,7 +106,7 @@ set<set<int>> graph_analyzer::get_CCs() {
     }
     else if (g.type == Directed) {
         // For search CC in dir-graph, firstly, init reversed graph and, secondly, use DFS on both graphs
-        if (rg.empty()) rg = g.get_reversed_graph();
+        if (rg.empty()) rg = g.get_reversed();
 
         for (auto v : v_list) {
             if (CC_comp_id[v] != -1) continue;
@@ -126,6 +126,29 @@ set<set<int>> graph_analyzer::get_CCs() {
     components_list.clear();
     CC_comp_id.clear();
     return components_set;
+}
+
+set<set<int>> graph_analyzer::get_SCCs() {
+    auto v_list = g.get_vertexes();
+    if (rg.empty()) rg = g.get_reversed();
+    for (auto v : v_list) {
+        if (!SCC_visited[v])
+            SCC_dfs1(v);
+    }
+    SCC_visited.clear();
+    auto components = set<set<int>>();
+    size_t n = SCC_order.size();
+    for (int i = 0; i < n; i++) {
+        int v = SCC_order[n - i - 1];
+        if (!SCC_visited[v]) {
+            SCC_dfs2(v);
+            components.insert(SCC_component);
+            SCC_component.clear();
+        }
+    }
+    SCC_visited.clear();
+    SCC_order.clear();
+    return components;
 }
 
 // This is implementation of Kosaraju's algorithm
@@ -231,13 +254,13 @@ double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_lo
     if (degrees_counter.empty()) init_degree_counters_cache();
     if (g.amount_vertexes == 0) g.calculate_amount_of_vertexes();
 
-    size_t min_degree = __builtin_powl(2, log2_degree);
+    size_t min_degree = 1 << log2_degree;
     size_t max_degree = min_degree * 2;
     size_t amount = 0;
     for (size_t degree = min_degree; degree < max_degree; degree++) {
         amount += degrees_counter[degree];
     }
-    return std::log2(amount / (double)g.amount_vertexes);
+    return std::log2((double) amount / (double)g.amount_vertexes);
 }
 
 size_t graph_analyzer::get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const {
@@ -262,27 +285,4 @@ void graph_analyzer::init_degree_counters_cache() {
         size_t degree = get_degree(v);
         ++degrees_counter[degree];
     }
-}
-
-set<set<int>> graph_analyzer::get_SCCs() {
-    auto v_list = g.get_vertexes();
-    if (rg.empty()) rg = g.get_reversed_graph();
-    for (auto v : v_list) {
-        if (!SCC_visited[v])
-            SCC_dfs1(v);
-    }
-    SCC_visited.clear();
-    auto components = set<set<int>>();
-    size_t n = SCC_order.size();
-    for (int i = 0; i < n; i++) {
-        int v = SCC_order[n - i - 1];
-        if (!SCC_visited[v]) {
-            SCC_dfs2(v);
-            components.insert(SCC_component);
-            SCC_component.clear();
-        }
-    }
-    SCC_visited.clear();
-    SCC_order.clear();
-    return components;
 }

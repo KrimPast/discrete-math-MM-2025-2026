@@ -8,5 +8,12 @@
 enum g_type {
     Undefined, Directed, Undirected
 };
+enum process_action {
+    TryParseEdge,
+    ParseMetadata,
+    DoNothing
+};
+typedef std::pair<int, int> edge;
+constexpr edge null_edge = edge{INT_MIN, INT_MIN};
 
 #endif // GENERAL_H

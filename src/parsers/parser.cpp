@@ -9,80 +9,102 @@
 using namespace std;
 
 graph parser::parse(const string &file_path) {
-    is_first = true;
+    line_index = 0;
     is_has_metadata = false;
+    edge metadata = null_edge;
 
-    auto g = graph();
     ifstream in(file_path);
     if (in.is_open()) {
         string line;
         while (getline(in, line)) {
-            process(g, line);
+            auto action = whatWeDoWithIt(line);
+            switch (action) {
+                case TryParseEdge:
+                {
+                    edge new_edge = try_parse_edge(line);
+                    if (new_edge != null_edge) // If one of many strokes in invalid, we only send warning
+                        g.insert(new_edge.first, new_edge.second);
+                    break;
+                }
+                case ParseMetadata:
+                {
+                    if (metadata != null_edge) {
+                        cerr << "(warning) parse: Double metadata in one file!" << endl;
+                    }
+                    metadata = try_parse_metadata(line);
+                    break;
+                }
+                case DoNothing: break;
+            }
+            ++line_index;
         }
+    }
+    if (metadata != null_edge) {
+        g.calculate_amount_of_vertexes();
+        if (metadata.first != g.amount_vertexes)
+            cerr << "(warning) parse: Real amount of vertexes is not equal expected (" << metadata.first << "!= " <<
+                g.amount_vertexes << ")" << endl;
+        if (metadata.second != g.amount_edges)
+            cerr << "(warning) parse: Real amount of edges is not equal expected (" << metadata.second << "!= " <<
+                g.amount_edges << ")" << endl;
     }
     in.close();
     return g;
 }
 
-void txt_parser::process(graph& graph, string& line){
+edge parser::try_parse_edge(string &line) const {
     vector<string> strs;
     boost::split(strs, line, separator);
-    if (line[0] == '#') {
-        is_first = false;
-        if (boost::contains(line, "Nodes")) {
-            graph.amount_vertexes = stoi(strs[2]);
-            graph.amount_edges = stoi(strs[4]);
-        }
+    if (strs.size() >= 2) {
+        return edge{stoi(strs[0]), stoi(strs[1])};
     }
-    else if (strs.size() == 2) {
-        int first = stoi(strs[0]), second = stoi(strs[1]);
-        if (is_first) {
-            graph.amount_vertexes = first;
-            graph.amount_edges = second;
-            is_first = false;
-        }
-        else {
-            graph.insert(stoi(strs[0]), stoi(strs[1]));
-        }
-    }
-    else {
-        throw runtime_error("txt_parser: Caused error!");
-    }
+    cerr << "(warning) try_parse_edge: Not enough arguments in #" << line_index + 1 << " line!" << endl;
+    return null_edge;
 }
-void csv_parser::process(graph& graph, string& line) {
-    if (is_first) {
-        is_first = false;
-        return;
+
+// (Start) Section "What we do with it"
+process_action txt_parser::whatWeDoWithIt(string &line) const {
+    if ((line[0] == '#' && line_index == 2) || (line[0] != '#' && line_index == 0)) {
+        return ParseMetadata;
     }
+    if (line[0] == '#') return DoNothing;
+    return TryParseEdge;
+}
+process_action csv_parser::whatWeDoWithIt(string &line) const {
+    if (line_index == 0)
+        return DoNothing;
+    return TryParseEdge;
+}
+
+process_action mtx_parser::whatWeDoWithIt(string &line) const {
+    if (line_index == 0) return DoNothing;
+    else if (line_index == 1) return ParseMetadata;
+    return TryParseEdge;
+}
+// (End) Section "What we do with it"
+
+// (Start) Section "Try parse metadata"
+edge txt_parser::try_parse_metadata(string &line) const {
     vector<string> strs;
     boost::split(strs, line, separator);
-    if (strs.size() == 2) {
-        graph.insert(stoi(strs[0]), stoi(strs[1]));
-    }
-    else {
-        throw runtime_error("csv_parser: Caused error!");
-    }
+    if (line_index == 0) return edge{stoi(strs[0]), stoi(strs[1])};
+    return edge{stoi(strs[2]), stoi(strs[4])};
 }
-void mtx_parser::process(graph& graph, string& line) {
-    if (line[0] == '%') return;
+edge csv_parser::try_parse_metadata(string &line) const {
+     return null_edge;
+}
+edge mtx_parser::try_parse_metadata(string &line) const {
     vector<string> strs;
     boost::split(strs, line, separator);
 
-    if (is_first && strs.size() == 3) {
-        graph.amount_vertexes = stoi(strs[0]);
-        graph.amount_edges = stoi(strs[2]);
-        is_first = false;
-        return;
+    if (strs.size() == 3) {
+        return edge{stoi(strs[0]), stoi(strs[2])};
     }
-
-    if (strs.size() == 2) {
-        graph.insert(stoi(strs[0]), stoi(strs[1]));
-    }
-    else {
-        throw runtime_error("csv_parser: Caused error!");
-    }
+    return null_edge;
 }
+// (End) Section "Try parse metadata"
 
+// Пройтись по файлу, считать, сколько у каждой вершины ребёр и проставить capacity
 graph uni_parser::parse(const string &file_path) {
     filesystem::path f = file_path;
     if (!filesystem::exists(file_path)) {
@@ -90,16 +112,8 @@ graph uni_parser::parse(const string &file_path) {
     }
     string ext = f.extension();
     graph g;
-    if (ext == ".mtx")
-        g = mtx_parser().parse(file_path);
-    else if (ext == ".txt")
-        g = txt_parser().parse(file_path);
-    else if (ext == ".csv")
-        g = csv_parser().parse(file_path);
-    else
-        throw runtime_error("uni_parser: Undefined format!");
 
-    if (boost::contains(file_path, "undirected")) {
+    if (boost::contains(file_path, "undirected") || boost::contains(file_path, "very_large_graphs")) {
         g.type = g_type::Undirected;
     }
     else if (boost::contains(file_path, "directed")) {
@@ -108,8 +122,15 @@ graph uni_parser::parse(const string &file_path) {
     else {
         throw runtime_error("Cannot identify type of graph. You must install it manually!\n");
     }
-
-    if (g.amount_vertexes == 0) g.calculate_amount_of_vertexes();
+    auto a = mtx_parser(g);
+    if (ext == ".mtx")
+        mtx_parser(g).parse(file_path);
+    else if (ext == ".txt")
+        txt_parser(g).parse(file_path);
+    else if (ext == ".csv")
+        csv_parser(g).parse(file_path);
+    else
+        throw runtime_error("uni_parser: Undefined format!");
 
     return g;
 }

@@ -65,7 +65,7 @@ private:
     size_t get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const;
 
     // For measuring probabilities function of degrees
-    unordered_map<int, size_t> degrees_counter;
+    unordered_map<size_t, size_t> degrees_counter;
     void init_degree_counters_cache();
 };
 

@@ -3,6 +3,8 @@
 #include <set>
 
 void graph::insert(const int from, const int to) {
+    if (type == Undefined) throw runtime_error("insert: graph type is undefined");
+
     (*this)[from].push_back(to);
     if (type == Undirected && from != to) {
         (*this)[to].push_back(from);
@@ -10,6 +12,7 @@ void graph::insert(const int from, const int to) {
     ++amount_edges;
 }
 void graph::remove(const int from, const int to) {
+    if (type == Undefined) throw runtime_error("insert: graph type is undefined");
     if (!contains(from)) return;
 
     std::erase((*this)[from], to);
@@ -31,14 +34,14 @@ set<int> graph::get_vertexes() const {
     return vertexes;
 }
 
-graph graph::get_reversed_graph() const {
+graph graph::get_reversed() const {
     if (type == Undirected) {
         throw runtime_error("get_reversed_graph: You sure that you really need RG by undirected graph?");
     } else if (type == Undefined) {
         throw runtime_error("get_reversed_graph: Undefined type of graph");
     }
     graph rg;
-    rg.type = type;
+    rg.type = Directed;
     rg.amount_vertexes = amount_vertexes;
     rg.amount_edges = amount_edges;
     for (auto& p : *this) {
@@ -59,6 +62,6 @@ void graph::calculate_amount_of_vertexes() {
         amount_vertexes = get_vertexes().size();
     }
     else {
-        throw runtime_error("calculate_vertexes: Invalid graph type");
+        throw runtime_error("calculate_amount_of_vertexes: Invalid graph type");
     }
 }

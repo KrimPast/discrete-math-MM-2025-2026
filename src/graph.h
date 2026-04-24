@@ -19,7 +19,7 @@ public:
     void remove(int from, int to);
 
     set<int> get_vertexes() const;
-    graph get_reversed_graph() const;
+    graph get_reversed() const;
     void calculate_amount_of_vertexes();
 };
 
