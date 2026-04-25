@@ -4,10 +4,13 @@
 #include <set>
 #include <unordered_map>
 #include <vector>
-
-#include "general.h"
+#include <stdexcept>
 
 using namespace std;
+
+enum g_type {
+    Undefined, Directed, Undirected
+};
 
 class graph : public unordered_map<int, vector<int>>{
 public:
@@ -17,6 +20,7 @@ public:
 
     void insert(int from, int to);
     void remove(int from, int to);
+    void remove_vertex(int v);
 
     set<int> get_vertexes() const;
     graph get_reversed() const;

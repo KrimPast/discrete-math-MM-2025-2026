@@ -1,11 +1,9 @@
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <stdexcept>
 
 #include "parser.h"
-#include "../general.h"
 
-#include <filesystem>
 using namespace std;
 
 graph parser::parse(const string &file_path) {

@@ -1,13 +1,9 @@
 #ifndef ANALYZERS_H
 #define ANALYZERS_H
 
-#include <vector>
 #include <cmath>
 
 #include "general.h"
-#include "graph.h"
-
-using namespace std;
 
 class graph_analyzer{
 public:
@@ -46,6 +42,9 @@ public:
 
     double get_probability_that_random_vertex_has_some_degree(size_t degree);
     double get_probability_that_random_vertex_has_some_degree_log_log(size_t log2_degree);
+
+    size_t get_size_of_max_CC_after_delete_x_percentage_vertexes(double x);
+    size_t get_size_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(double x);
 private:
     // For searching connected components
     unordered_map<int, int> CC_comp_id;
@@ -66,7 +65,11 @@ private:
 
     // For measuring probabilities function of degrees
     unordered_map<size_t, size_t> degrees_counter;
+    vector<pair<size_t, int>> degrees_vector; // first - degree, second - vertex
     void init_degree_counters_cache();
+
+    // For measuring sizes after deletes
+    set<int> get_max_CC();
 };
 
 #endif // ANALYZERS_H

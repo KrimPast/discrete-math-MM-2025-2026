@@ -1,7 +1,5 @@
 #include "graph.h"
 
-#include <set>
-
 void graph::insert(const int from, const int to) {
     if (type == Undefined) throw runtime_error("insert: graph type is undefined");
 
@@ -22,9 +20,30 @@ void graph::remove(const int from, const int to) {
     --amount_edges;
 }
 
+void graph::remove_vertex(int v) {
+    if (type == Undefined) throw runtime_error("remove_vertex: graph type is undefined");
+    if (type == Undirected) {
+        auto neighbors = (*this)[v];
+        for (int i = neighbors.size() - 1; i >= 0; --i) {
+            remove(v, neighbors[i]);
+        }
+        neighbors.clear();
+    }
+    else { // type == Directed
+        auto vertexes = get_vertexes();
+        for (auto other : vertexes) {
+            amount_edges -= std::erase((*this)[other], v);
+        }
+        amount_edges -= (*this)[v].size();
+        (*this)[v].clear();
+    }
+    if (amount_vertexes > 0) --amount_vertexes; // if setted
+}
+
 set<int> graph::get_vertexes() const {
     set<int> vertexes;
     for (auto& pair : *this) {
+        if (pair.second.empty()) continue;
         vertexes.insert(pair.first);
         auto& others = pair.second;
         for (auto other : others) {

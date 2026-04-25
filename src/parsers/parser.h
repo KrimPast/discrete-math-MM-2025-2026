@@ -2,12 +2,20 @@
 #define PARSER_H
 
 #include <string>
-#include <filesystem>
+#include <boost/algorithm/string.hpp>
 
-#include "../graph.h"
-using namespace std;
+#include "../general.h"
 
 typedef boost::algorithm::detail::is_any_ofF<char> sep_type;
+
+enum process_action {
+    TryParseEdge,
+    TryParseMetadata,
+    DoNothing
+};
+
+typedef std::pair<int, int> edge;
+constexpr edge null_edge = edge{INT_MIN, INT_MIN};
 
 class parser {
 public:

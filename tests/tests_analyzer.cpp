@@ -1,7 +1,7 @@
-#include "tests_analyzer.h"
+#include "tests.h"
+
+#include <cassert>
 #include "../src/analyzer.h"
-#include "../src/general.h"
-#include "../src/graph.h"
 
 namespace analyzer_tests {
     void tests() {

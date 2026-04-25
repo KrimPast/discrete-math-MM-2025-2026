@@ -274,12 +274,54 @@ double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_lo
 }
 
 
-
 void graph_analyzer::init_degree_counters_cache() {
     degrees_counter.clear();
+    degrees_vector.clear();
     auto vertexes = g.get_vertexes();
     for (auto v : vertexes) {
         size_t degree = get_degree(v);
         ++degrees_counter[degree];
+        degrees_vector.emplace_back(degree, v);
     }
+}
+
+set<int> graph_analyzer::get_max_CC() {
+    auto CCs = get_CCs();
+    auto vertexes = g.get_vertexes();
+    set<int> &max_CC = CCs[0];
+    for (auto &CC: CCs) {
+        if (CC.size() > max_CC.size()) {
+            max_CC = CC;
+        }
+    }
+    return max_CC;
+}
+
+size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes(double x){
+    if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
+    if (x == 1) return 0;
+
+    auto deleting_amount = (size_t)(x * (double)g.amount_vertexes);
+    auto deleting = other::get_random_n_elements_from_set(g.get_vertexes(), deleting_amount);
+    for (auto v : deleting) {
+        g.remove_vertex(v);
+    }
+    return get_max_CC().size();
+}
+
+size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(double x) {
+    if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
+    if (x == 1) return 0;
+
+    auto deleting_amount = (size_t)(x * (double)g.amount_vertexes);
+    init_degree_counters_cache();
+
+    sort(degrees_vector.begin(), degrees_vector.end(), other::degree_greater);
+    size_t deleted = 0;
+    while (deleted < deleting_amount) {
+        g.remove_vertex(degrees_vector[deleted].second);
+        ++deleted;
+    }
+
+    return get_max_CC().size();
 }
