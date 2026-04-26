@@ -175,9 +175,11 @@ void graph_analyzer::SCC_dfs2(int v) {
 }
 
 size_t graph_analyzer::get_amount_of_opened_triplets() const {
-    size_t amount = 0;
+    atomic_size_t amount = 0;
     auto vertexes = g.get_vertexes();
-    for (auto v : vertexes) {
+    vector<int> vertexes_list(vertexes.begin(), vertexes.end());
+#pragma omp parallel for
+    for (auto v : vertexes_list) {
         amount += get_amount_of_opened_triplets(v);
     }
     return amount;
@@ -185,7 +187,8 @@ size_t graph_analyzer::get_amount_of_opened_triplets() const {
 
 size_t graph_analyzer::get_amount_of_opened_triplets(int v) const {
     vector<int>& neighbourhood = g[v];
-    size_t count = 0;
+    atomic_size_t count = 0;
+#pragma omp parallel for
     for (auto second : neighbourhood) {
         for (auto third : g[second]) {
             if (v == third) continue;
