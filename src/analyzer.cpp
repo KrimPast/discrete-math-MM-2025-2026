@@ -1,7 +1,9 @@
 #include "analyzer.h"
 
+#include <queue>
+
 double graph_analyzer::get_density() const {
-    size_t max_edges = (g.amount_vertexes / 2) * (g.amount_vertexes - 1);
+    size_t max_edges = g.amount_vertexes / 2 * (g.amount_vertexes - 1);
     return static_cast<double>(g.amount_edges) / static_cast<double>(max_edges);
 }
 
@@ -30,11 +32,11 @@ double graph_analyzer::get_fraction_of_vertexes_in_max_SCC() {
     return static_cast<double>(mx) / static_cast<double>(g.size());
 }
 
-double graph_analyzer::get_local_clustering_coefficient(int v) {
+double graph_analyzer::get_local_clustering_coefficient(const int v) {
     if (g.type == Undefined) {
         throw runtime_error("get_local_clustering_coefficient: Cannot on undefined graph!\n");
     }
-    set<int> neighbourhood_set(g[v].begin(), g[v].end());
+    set neighbourhood_set(g[v].begin(), g[v].end());
 
     if (g.type == Directed) {
         if (rg.empty()) rg = g.get_reversed();
@@ -43,7 +45,7 @@ double graph_analyzer::get_local_clustering_coefficient(int v) {
     vector<int> neighbourhood_list(neighbourhood_set.begin(), neighbourhood_set.end());
     neighbourhood_set.clear();
 
-    size_t count = get_amount_of_closed_triplets(v, neighbourhood_list);
+    size_t count = get_amount_of_closed_triplets(neighbourhood_list);
     if (g.type == Undirected) count *= 2;
 
     size_t neighbours = neighbourhood_list.size();
@@ -73,14 +75,14 @@ size_t graph_analyzer::get_amount_of_triangles() const {
 }
 
 // CC means Connected Components
-void graph_analyzer::CC_undirected_dfs(int v) {
+void graph_analyzer::CC_undirected_dfs(const int v) {
     for (auto o : g[v]) {
         if (CC_comp_id[o] != -1) continue;
         CC_comp_id[o] = CC_comp_id[v];
         CC_undirected_dfs(o);
     }
 }
-void graph_analyzer::CC_directed_dfs(int v) {
+void graph_analyzer::CC_directed_dfs(const int v) {
     CC_undirected_dfs(v);
     for (auto o : rg[v]) {
         if (CC_comp_id[o] != -1) continue;
@@ -148,14 +150,14 @@ vector<set<int>> graph_analyzer::get_SCCs() {
 }
 
 // This is implementation of Kosaraju's algorithm
-void graph_analyzer::SCC_dfs1(int v) {
+void graph_analyzer::SCC_dfs1(const int v) {
     SCC_visited[v] = true;
     for (auto o : g[v])
         if (!SCC_visited[o])
             SCC_dfs1(o);
     SCC_order.push_back(v);
 }
-void graph_analyzer::SCC_dfs2(int v) {
+void graph_analyzer::SCC_dfs2(const int v) {
     SCC_visited[v] = true;
     SCC_component.insert(v);
     for (auto o : rg[v])
@@ -172,7 +174,7 @@ size_t graph_analyzer::get_amount_of_opened_triplets() const {
     return amount;
 }
 
-size_t graph_analyzer::get_amount_of_opened_triplets(int v) const {
+size_t graph_analyzer::get_amount_of_opened_triplets(const int v) const {
     vector<int>& neighbourhood = g[v];
     size_t count = 0;
     for (auto second : neighbourhood) {
@@ -195,11 +197,56 @@ size_t graph_analyzer::get_amount_of_closed_triplets() const {
     return amount;
 }
 
-size_t graph_analyzer::get_amount_of_closed_triplets(int v) const {
+size_t graph_analyzer::get_amount_of_closed_triplets(const int v) const {
     vector<int>& neighbourhood = g[v];
-    return get_amount_of_closed_triplets(v, neighbourhood);
+    return get_amount_of_closed_triplets(neighbourhood);
 }
-size_t graph_analyzer::get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const {
+
+pair<int, int> graph_analyzer::find_farthest_vertex_by_bfs(const int v) {
+    unordered_map<int, int> distances = get_distances_from(v);
+    int far_vertex = v;
+    int max_dist = 0;
+    for (const auto& [vertex, dist] : distances) {
+        if (dist > max_dist) {
+            max_dist = dist;
+            far_vertex = vertex;
+        }
+    }
+    return {far_vertex, max_dist};
+}
+
+unordered_map<int, int> graph_analyzer::get_distances_from(const int v) {
+    unordered_map<int, int> dist;
+    std::queue<int> q;
+    dist[v] = 0;
+    q.push(v);
+
+    if (g.type == Directed && rg.empty())
+        rg = g.get_reversed();
+
+    while (!q.empty()) {
+        int cur = q.front(); q.pop();
+
+        for (int to : g[cur]) {
+            if (!dist.contains(to)) {
+                dist[to] = dist[cur] + 1;
+                q.push(to);
+            }
+        }
+
+        if (g.type == Directed) {
+            for (int to : rg[cur]) {
+                if (!dist.contains(to)) {
+                    dist[to] = dist[cur] + 1;
+                    q.push(to);
+                }
+            }
+        }
+    }
+    return dist;
+}
+
+size_t graph_analyzer::get_amount_of_closed_triplets(const vector<int>& neighbourhood) const {
     size_t count = 0;
     for (int j = 0; j < neighbourhood.size(); j++) {
         size_t k_start = g.type == Undirected ? j + 1 : 0;
@@ -214,7 +261,7 @@ size_t graph_analyzer::get_amount_of_closed_triplets(int v, const vector<int>& n
     return count;
 }
 
-size_t graph_analyzer::get_degree(int v) const {
+size_t graph_analyzer::get_degree(const int v) const {
     if (g.type == Undirected) {
         if (!g.contains(v)) throw runtime_error("get_degree: No such vertex in graph");
         return g[v].size() + (ranges::find(g[v], v) != g[v].end() ? 1 : 0); // reflexive adds two to degree
@@ -297,7 +344,7 @@ set<int> graph_analyzer::get_max_CC() {
     return max_CC;
 }
 
-size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes(double x){
+size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes(const double x){
     if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
     if (x == 1) return 0;
 
@@ -309,7 +356,7 @@ size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes(dou
     return get_max_CC().size();
 }
 
-size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(double x) {
+size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(const double x) {
     if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
     if (x == 1) return 0;
 
@@ -324,4 +371,187 @@ size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes_of_
     }
 
     return get_max_CC().size();
+}
+
+size_t graph_analyzer::estimate_diameter_of_max_CC_from_double_sweep() {
+    const auto max_CC = get_max_CC();
+    if (max_CC.empty()) return 0;
+
+    const int start = other::random_element(max_CC);
+
+    auto [v1, d1] = find_farthest_vertex_by_bfs(start);
+
+    auto [v2, d2] = find_farthest_vertex_by_bfs(v1);
+
+    return static_cast<size_t>(d2);
+}
+
+size_t graph_analyzer::estimate_diameter_of_max_CC_from_sample(const int sample_size) {
+    const auto max_cc = get_max_CC();
+    if (max_cc.empty()) return 0;
+
+    const int k = min(sample_size, static_cast<int>(max_cc.size()));
+    const auto sample = other::get_random_n_elements_from_set(max_cc, k);
+    auto dists = pairwise_distances_in_component(sample);
+    if (dists.empty()) return 0;
+    return *ranges::max_element(dists);
+}
+
+double graph_analyzer::estimate_90th_percentile_of_max_CC_from_sample(const int sample_size) {
+    const auto max_cc = get_max_CC();
+    if (max_cc.empty()) return 0.0;
+
+    const int k = min(sample_size, static_cast<int>(max_cc.size()));
+    const auto sample = other::get_random_n_elements_from_set(max_cc, k);
+    auto dists = pairwise_distances_in_component(sample);
+    if (dists.empty()) return 0.0;
+
+    ranges::sort(dists);
+    const size_t idx = (dists.size() - 1) * 9 / 10;
+    return dists[idx];
+}
+
+unordered_map<int, int> graph_analyzer::get_distances_in_subset(const int v, const set<int>& allowed)
+{
+    unordered_map<int, int> dist;
+    queue<int> q;
+    if (!allowed.contains(v)) return dist;
+
+    dist[v] = 0;
+    q.push(v);
+
+    if (g.type == Directed && rg.empty())
+        rg = g.get_reversed();
+
+    while (!q.empty()) {
+        int cur = q.front(); q.pop();
+
+        for (int to : g[cur]) {
+            if (allowed.contains(to) && !dist.contains(to)) {
+                dist[to] = dist[cur] + 1;
+                q.push(to);
+            }
+        }
+
+        if (g.type == Directed) {
+            for (int to : rg[cur]) {
+                if (allowed.contains(to) && !dist.contains(to)) {
+                    dist[to] = dist[cur] + 1;
+                    q.push(to);
+                }
+            }
+        }
+    }
+    return dist;
+}
+
+double graph_analyzer::get_average_clustering_coefficient_max_CC() {
+    const set<int> max_cc = get_max_CC();
+    if (max_cc.empty()) return 0.0;
+
+    double sum = 0.0;
+    for (const int v : max_cc) {
+        sum += get_local_clustering_coefficient(v);
+    }
+    return sum / static_cast<double>(max_cc.size());
+}
+
+set<int> graph_analyzer::build_snowball_sample(const int target_size) {
+    auto max_cc = get_max_CC();
+    if (max_cc.empty() || max_cc.size() == 1) return max_cc;
+
+    if (g.type == Directed && rg.empty())
+        rg = g.get_reversed();
+
+    const int seed1 = other::random_element(max_cc);
+
+    set<int> neighbors;
+    for (int to : g[seed1]) neighbors.insert(to);
+    if (g.type == Directed)
+        for (int to : rg[seed1]) neighbors.insert(to);
+
+    const int seed2 = other::random_element(neighbors);
+
+    set<int> sample;
+    sample.insert(seed1);
+    sample.insert(seed2);
+
+    std::queue<int> q;
+    q.push(seed1);
+    q.push(seed2);
+
+    while (!q.empty() && sample.size() < target_size) {
+        int cur = q.front(); q.pop();
+
+        for (int to : g[cur]) {
+            if (sample.insert(to).second) {
+                if (sample.size() >= target_size) break;
+                q.push(to);
+            }
+        }
+        if (sample.size() >= target_size) break;
+
+        if (g.type == Directed) {
+            for (int to : rg[cur]) {
+                if (sample.insert(to).second) {
+                    if (sample.size() >= target_size) break;
+                    q.push(to);
+                }
+            }
+        }
+    }
+
+    return sample;
+}
+
+size_t graph_analyzer::estimate_diameter_of_max_CC_from_snowball(const int target_size) {
+    const auto snowball = build_snowball_sample(target_size);
+    if (snowball.size() < 2) return 0;
+
+    auto dists = pairwise_distances_in_subset(snowball);
+    if (dists.empty()) return 0;
+    return *ranges::max_element(dists);
+}
+
+double graph_analyzer::estimate_90th_percentile_of_max_CC_from_snowball(const int target_size) {
+    const auto snowball = build_snowball_sample(target_size);
+    if (snowball.size() < 2) return 0.0;
+
+    auto dists = pairwise_distances_in_subset(snowball);
+    if (dists.empty()) return 0.0;
+
+    ranges::sort(dists);
+    size_t idx = (dists.size() - 1) * 9 / 10;
+    return dists[idx];
+}
+
+vector<int> graph_analyzer::pairwise_distances_in_component(const vector<int>& sample) {
+    vector<int> result;
+    const size_t k = sample.size();
+    result.reserve(k * (k - 1) / 2);
+    for (int i = 0; i < k; ++i) {
+        auto dist_map = get_distances_from(sample[i]);
+        for (int j = i + 1; j < k; ++j) {
+            if (auto it = dist_map.find(sample[j]); it != dist_map.end()) {
+                result.push_back(it->second);
+            }
+        }
+    }
+    return result;
+}
+
+vector<int> graph_analyzer::pairwise_distances_in_subset(const set<int>& subset) {
+    const vector vertices(subset.begin(), subset.end());
+    vector<int> result;
+    const size_t n = vertices.size();
+    result.reserve(n * (n - 1) / 2);
+    for (int i = 0; i < n; ++i) {
+        auto dmap = get_distances_in_subset(vertices[i], subset);
+        for (int j = i + 1; j < n; ++j) {
+            if (auto it = dmap.find(vertices[j]); it != dmap.end()) {
+                result.push_back(it->second);
+            }
+        }
+    }
+    return result;
 }
