@@ -25,6 +25,7 @@ public:
     set<int> get_vertexes() const;
     graph get_reversed() const;
     void calculate_amount_of_vertexes();
+    bool is_changed = false;
 };
 
 #endif //GRAPH_H

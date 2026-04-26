@@ -69,7 +69,12 @@ double graph_analyzer::get_average_clustering_coefficient() {
 }
 
 size_t graph_analyzer::get_amount_of_triangles() const {
-    return get_amount_of_closed_triplets() * 3;
+    static size_t triangles;
+    if (!g.is_changed)
+        return triangles;
+    g.is_changed = false;
+    triangles = get_amount_of_closed_triplets() * 3;
+    return triangles;
 }
 
 // CC means Connected Components
@@ -187,11 +192,19 @@ size_t graph_analyzer::get_amount_of_opened_triplets(int v) const {
 }
 
 size_t graph_analyzer::get_amount_of_closed_triplets() const {
+    static size_t last_amount_vertexes = 0;
+    static size_t last_closed_triplets = 0;
+    if (last_amount_vertexes == g.amount_vertexes) {
+        return last_closed_triplets;
+    }
+
     size_t amount = 0;
     auto vertexes = g.get_vertexes();
     for (auto v : vertexes) {
         amount += get_amount_of_closed_triplets(v);
     }
+    last_amount_vertexes = g.amount_vertexes;
+    last_closed_triplets = amount;
     return amount;
 }
 
@@ -288,6 +301,8 @@ void graph_analyzer::init_degree_counters_cache() {
 set<int> graph_analyzer::get_max_CC() {
     auto CCs = get_CCs();
     auto vertexes = g.get_vertexes();
+    if (vertexes.empty()) return vertexes;
+
     set<int> &max_CC = CCs[0];
     for (auto &CC: CCs) {
         if (CC.size() > max_CC.size()) {
@@ -301,7 +316,8 @@ size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes(dou
     if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
     if (x == 1) return 0;
 
-    auto deleting_amount = (size_t)(x * (double)g.amount_vertexes);
+    g.calculate_amount_of_vertexes();
+    auto deleting_amount = (size_t)(x * (float)g.amount_vertexes);
     auto deleting = other::get_random_n_elements_from_set(g.get_vertexes(), deleting_amount);
     for (auto v : deleting) {
         g.remove_vertex(v);
@@ -313,7 +329,8 @@ size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes_of_
     if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
     if (x == 1) return 0;
 
-    auto deleting_amount = (size_t)(x * (double)g.amount_vertexes);
+    g.calculate_amount_of_vertexes();
+    auto deleting_amount = (size_t)(x * (float)g.amount_vertexes);
     init_degree_counters_cache();
 
     sort(degrees_vector.begin(), degrees_vector.end(), other::degree_greater);
