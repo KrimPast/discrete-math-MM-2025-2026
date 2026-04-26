@@ -37,11 +37,10 @@ graph parser::parse(const string &file_path) {
             ++line_index;
         }
     }
-    g.calculate_amount_of_vertexes();
     if (metadata != null_edge) {
-        if (metadata.first != g.amount_vertexes)
+        if (metadata.first != g.amount_vertexes())
             cerr << "(warning) parse: Real amount of vertexes is not equal expected (" << metadata.first << " != " <<
-                g.amount_vertexes << ")" << endl;
+                g.amount_vertexes() << ")" << endl;
         if (metadata.second != g.amount_edges)
             cerr << "(warning) parse: Real amount of edges is not equal expected (" << metadata.second << " != " <<
                 g.amount_edges << ")" << endl;

@@ -1,0 +1,47 @@
+{
+    "Basic Information": {
+        "Name": "Email-EuAll.txt",
+        "Type": "Undirected",
+        "Amount of vertexes": 265214,
+        "Amount of edges": 365570,
+        "Density": 1.0394636114519873e-05
+    },
+    "Connected Components": {
+        "Amount of CCs": 15836,
+        "Fraction of vertexes in max CC": 0.847738053043957
+    },
+    "Additional Information": {
+        "Minimum degree": 1,
+        "Maximum degree": 7636,
+        "Average degree": 2.7567926278401593,
+        "Amount of triangles": 3264495,
+        "Global Clustering coefficient": 0.0027897274562678404,
+        "Average Clustering coefficient": 0.06724249991544598,
+        "Sizes of max CC after delete x% vertexes": {
+            "0": 224832,
+            "10": 185369,
+            "20": 148937,
+            "30": 115423,
+            "40": 85150,
+            "50": 60071,
+            "60": 37570,
+            "70": 23721,
+            "80": 10078,
+            "90": 2075,
+            "100": 0
+        },
+        "Sizes of max CC after delete x% vertexes of max degrees": {
+            "0": 224832,
+            "10": 5,
+            "20": 2,
+            "30": 2,
+            "40": 2,
+            "50": 2,
+            "60": 2,
+            "70": 2,
+            "80": 2,
+            "90": 2,
+            "100": 0
+        }
+    }
+}

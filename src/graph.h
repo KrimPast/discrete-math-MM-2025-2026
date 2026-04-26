@@ -15,7 +15,7 @@ enum g_type {
 class graph : public unordered_map<int, vector<int>>{
 public:
     g_type type = Undefined;
-    size_t amount_vertexes = 0;
+    size_t amount_vertexes();
     size_t amount_edges = 0;
 
     void insert(int from, int to);
@@ -24,8 +24,8 @@ public:
 
     set<int> get_vertexes() const;
     graph get_reversed() const;
-    void calculate_amount_of_vertexes();
-    bool is_changed = false;
+private:
+    unordered_map<int, int> vertex_counter;
 };
 
 #endif //GRAPH_H

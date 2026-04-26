@@ -70,7 +70,7 @@ namespace summarizer {
 
         set_graph_name(j, filesystem::path(graph_path).filename().string());
         set_graph_type(j, g.type);
-        set_amount_of_vertexes(j, g.amount_vertexes);
+        set_amount_of_vertexes(j, g.amount_vertexes());
         set_amount_of_edges(j, g.amount_edges);
         set_density(j, analyzer.get_density());
 
@@ -139,25 +139,5 @@ namespace summarizer {
                     [to_string((i + 1) * 100 / steps)] = size;
             }
         }
-    }
-    string result_to_string(const result res) {
-        switch (res) {
-            case graph_name: return "Name";
-            case graph_type: return "Type";
-            case amount_vertexes: return "Amount vertexes";
-            case amount_edges: return "Amount edges";
-            case density: return "Density";
-            case amount_of_CC: return "Amount of CCs";
-            case amount_of_SCC: return "Amount of SCCs";
-            case fraction_of_vertexes_in_max_CC: return "Fraction of vertexes in max CC";
-            case fraction_of_vertexes_in_max_SCC: return "Fraction of vertexes in max SCC";
-            case amount_triangles: return "Amount of triangles";
-            case global_clustering_coefficient: return "Global Clustering coefficient";
-            case average_clustering_coefficient: return "Average Clustering coefficient";
-            case min_degree: return "Minimum degree";
-            case max_degree: return "Maximum degree";
-            case average_degree: return "Average degree";
-        }
-        throw runtime_error("Undefined type of result!");
     }
 }
