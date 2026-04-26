@@ -1,4 +1,8 @@
+#include <omp.h>
 #include "analyzer.h"
+
+#include <atomic>
+#include <mutex>
 
 double graph_analyzer::get_density() const {
     size_t max_edges = (g.amount_vertexes / 2) * (g.amount_vertexes - 1);
@@ -215,9 +219,10 @@ size_t graph_analyzer::get_amount_of_closed_triplets(int v) const {
     return get_amount_of_closed_triplets(v, neighbourhood);
 }
 size_t graph_analyzer::get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const {
-    size_t count = 0;
-    for (int j = 0; j < neighbourhood.size(); j++) {
-        size_t k_start = g.type == Undirected ? j + 1 : 0;
+    atomic_size_t count = 0;
+    for (size_t j = 0; j < neighbourhood.size(); ++j) {
+        atomic_size_t k_start = g.type == Undirected ? j + 1 : 0;
+#pragma omp parallel for
         for (size_t k = k_start; k < neighbourhood.size(); k++) {
             int second = neighbourhood[j];
             int third = neighbourhood[k];

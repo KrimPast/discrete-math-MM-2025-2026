@@ -87,9 +87,9 @@ namespace summarizer {
             set_average_degree(j, analyzer.get_average_degree());
         }
 
-        set_amount_of_triangles(j, analyzer.get_amount_of_triangles()); // wastes a very long time
-        set_global_clustering_coefficient(j, analyzer.get_global_clustering_coefficient());
-        set_average_clustering_coefficient(j, analyzer.get_average_clustering_coefficient());
+        set_amount_of_triangles(j, analyzer.get_amount_of_triangles());
+        set_global_clustering_coefficient(j, analyzer.get_global_clustering_coefficient()); // x16 seconds
+        set_average_clustering_coefficient(j, analyzer.get_average_clustering_coefficient()); // x6 seconds
 
         destructive_summarizes(j, g);
         out << j.dump(4);
@@ -131,6 +131,7 @@ namespace summarizer {
             p = 1.0f / (float) steps;
             j[additional_information]["Sizes of max CC after delete x% vertexes of max degrees"]["0"]
                 = analyzer.get_size_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(0);
+// #pragma omp parallel for
             for (int i = 0; i < steps; i++) {
                 double curr_p = p / (1 - ((float)i / (float)steps));
                 size_t size = analyzer.get_size_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(curr_p);

@@ -34,9 +34,6 @@ namespace summarizer {
         // double get_probability_that_random_vertex_has_some_degree(size_t degree);
         // double get_probability_that_random_vertex_has_some_degree_log_log(size_t log2_degree);
 
-        // Many measures?
-        // size_t get_size_of_max_CC_after_delete_x_percentage_vertexes(double x);
-        // size_t get_size_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(double x);
     };
 
     void sum_up(const string &graph_path, const string &log_path);

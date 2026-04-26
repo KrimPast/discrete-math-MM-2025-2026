@@ -6,6 +6,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 project(discrete_math_MM_2025_2026)
 
 set(CMAKE_CXX_STANDARD 20)
+add_compile_options(-fopenmp)
+add_link_options(-fopenmp)
 
 add_executable(discrete_math_MM_2025_2026 main.cpp
         src/graph.cpp
