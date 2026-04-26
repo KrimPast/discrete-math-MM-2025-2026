@@ -69,12 +69,14 @@ double graph_analyzer::get_average_clustering_coefficient() {
 }
 
 size_t graph_analyzer::get_amount_of_triangles() const {
-    static size_t triangles;
-    if (!g.is_changed)
-        return triangles;
-    g.is_changed = false;
-    triangles = get_amount_of_closed_triplets() * 3;
-    return triangles;
+    static size_t last_amount_vertexes = 0;
+    static size_t last_triangles = 0;
+    if (last_amount_vertexes == g.amount_vertexes) {
+        return last_triangles;
+    }
+    last_amount_vertexes = g.amount_vertexes;
+    last_triangles = get_amount_of_closed_triplets() * 3;
+    return last_triangles;
 }
 
 // CC means Connected Components
