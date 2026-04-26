@@ -2,7 +2,7 @@
 
 double graph_analyzer::get_density() const {
     size_t max_edges = (g.amount_vertexes / 2) * (g.amount_vertexes - 1);
-    return (double)g.amount_edges / (double)max_edges;
+    return static_cast<double>(g.amount_edges) / static_cast<double>(max_edges);
 }
 
 size_t graph_analyzer::get_amount_of_CC() {
@@ -18,7 +18,7 @@ double graph_analyzer::get_fraction_of_vertexes_in_max_CC() {
     for (auto &component : components) {
         mx = max(mx, component.size());
     }
-    return (double)mx / (double)g.size();
+    return static_cast<double>(mx) / static_cast<double>(g.size());
 }
 
 double graph_analyzer::get_fraction_of_vertexes_in_max_SCC() {
@@ -27,7 +27,7 @@ double graph_analyzer::get_fraction_of_vertexes_in_max_SCC() {
     for (auto &component : components) {
         mx = max(mx, component.size());
     }
-    return (double)mx / (double)g.size();
+    return static_cast<double>(mx) / static_cast<double>(g.size());
 }
 
 double graph_analyzer::get_local_clustering_coefficient(int v) {
@@ -49,14 +49,14 @@ double graph_analyzer::get_local_clustering_coefficient(int v) {
     size_t neighbours = neighbourhood_list.size();
     size_t max_count = neighbours * (neighbours - 1);
     if (max_count == 0) return 0; // means vertex doesn't have third neighbor
-    return (double)count / (double) max_count;
+    return static_cast<double>(count) / static_cast<double>(max_count);
 }
 
 double graph_analyzer::get_global_clustering_coefficient() const {
     size_t opened_triplets = get_amount_of_opened_triplets();
     size_t closed_triplets = get_amount_of_closed_triplets();
     size_t triplets = opened_triplets + closed_triplets;
-    return (double)closed_triplets / (double)triplets;
+    return static_cast<double>(closed_triplets) / static_cast<double>(triplets);
 }
 
 double graph_analyzer::get_average_clustering_coefficient() {
@@ -65,7 +65,7 @@ double graph_analyzer::get_average_clustering_coefficient() {
     for (auto v : vertexes) {
         amount += get_local_clustering_coefficient(v);
     }
-    return amount / (double) vertexes.size();
+    return amount / static_cast<double>(vertexes.size());
 }
 
 size_t graph_analyzer::get_amount_of_triangles() const {
@@ -247,7 +247,7 @@ double graph_analyzer::get_average_degree() const {
         sm += get_degree(v);
     }
     g.calculate_amount_of_vertexes();
-    return (double)sm / (double)g.amount_vertexes;
+    return static_cast<double>(sm) / static_cast<double>(g.amount_vertexes);
 }
 
 // Function return probability, which enters in [0, 1], what means random vertex has degree, which equals input degree
@@ -255,7 +255,7 @@ double graph_analyzer::get_probability_that_random_vertex_has_some_degree(size_t
     if (degrees_counter.empty()) init_degree_counters_cache();
     if (g.amount_vertexes == 0) g.calculate_amount_of_vertexes();
 
-    return (double)degrees_counter[degree] / (double)g.amount_vertexes;
+    return static_cast<double>(degrees_counter[degree]) / static_cast<double>(g.amount_vertexes);
 }
 
 // Function returns log2(probability), which enters in (-infinity, 0], what means random vertex has degree, which enters in...
@@ -270,7 +270,7 @@ double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_lo
     for (size_t degree = min_degree; degree < max_degree; degree++) {
         amount += degrees_counter[degree];
     }
-    return std::log2((double) amount / (double)g.amount_vertexes);
+    return std::log2(static_cast<double>(amount) / static_cast<double>(g.amount_vertexes));
 }
 
 
@@ -301,7 +301,7 @@ size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes(dou
     if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
     if (x == 1) return 0;
 
-    auto deleting_amount = (size_t)(x * (double)g.amount_vertexes);
+    auto deleting_amount = static_cast<size_t>(x * static_cast<double>(g.amount_vertexes));
     auto deleting = other::get_random_n_elements_from_set(g.get_vertexes(), deleting_amount);
     for (auto v : deleting) {
         g.remove_vertex(v);
@@ -313,10 +313,10 @@ size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes_of_
     if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
     if (x == 1) return 0;
 
-    auto deleting_amount = (size_t)(x * (double)g.amount_vertexes);
+    auto deleting_amount = static_cast<size_t>(x * static_cast<double>(g.amount_vertexes));
     init_degree_counters_cache();
 
-    sort(degrees_vector.begin(), degrees_vector.end(), other::degree_greater);
+    ranges::sort(degrees_vector, other::degree_greater);
     size_t deleted = 0;
     while (deleted < deleting_amount) {
         g.remove_vertex(degrees_vector[deleted].second);
