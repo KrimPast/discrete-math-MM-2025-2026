@@ -1,6 +1,7 @@
 #ifndef ANALYZERS_H
 #define ANALYZERS_H
 
+#include <any>
 #include <cmath>
 #include <unordered_map>
 #include <vector>

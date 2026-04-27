@@ -3,6 +3,9 @@
 #include <atomic>
 #include <queue>
 
+#include <atomic>
+#include <queue>
+
 double graph_analyzer::get_density() const {
     const size_t max_edges = g.amount_vertexes() * (g.amount_vertexes() - 1) / 2;
     return static_cast<double>(g.amount_edges) / static_cast<double>(max_edges);
