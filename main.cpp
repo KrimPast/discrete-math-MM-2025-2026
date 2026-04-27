@@ -3,6 +3,7 @@
 
 #include "src/analyzer.h"
 #include "src/parsers/parser.h"
+#include "src/summarizer/summarizer.h"
 #include "tests/tests.h"
 
 template <typename Func>
@@ -38,11 +39,36 @@ void parse_example() {
     measure("sample 90 percentile",   [&] { return analyzer.estimate_90th_percentile_of_max_CC_from_sample(); });
     measure("snowball 90 percentile", [&] { return analyzer.estimate_90th_percentile_of_max_CC_from_snowball(); });
 }
+void json_example() {
+     string project_path = filesystem::current_path().parent_path();
+     string graph_path = project_path + "/datasets/undirected/Email-EuAll.txt";
+     string summarized_path = project_path + "/summarized/" + filesystem::path(graph_path).filename().string() + ".json";
+     string summarized_out_path = project_path + "/summarized/" + filesystem::path(graph_path).filename().string() + "_out.json";
+     json j = summarizer::json_open(summarized_path);
+     j["test"] = 123;
+     summarizer::json_write(j, summarized_out_path, true);
+     cout << j.dump(4) << endl;
+}
 
 int main() {
      // Tests works only in DEBUG build
      analyzer_tests::tests();
      graph_tests::tests();
+
+     string project_path = filesystem::current_path().parent_path();
+
+     // string graph_path = project_path + "/datasets/directed/soc-wiki-Vote.mtx";
+     // string graph_path = project_path + "/datasets/directed/web-Stanford.txt";
+     // string graph_path = project_path + "/datasets/undirected/musae_git_edges.csv";
+
+     string graph_path = project_path + "/datasets/undirected/Email-EuAll.txt";
+     string summarized_path = project_path + "/summarized/" + filesystem::path(graph_path).filename().string() + ".json";
+
+     // summarizer::sum_up(graph_path, summarized_path);
+     // json_example();
+
      parse_example();
+
+
      return 0;
 }

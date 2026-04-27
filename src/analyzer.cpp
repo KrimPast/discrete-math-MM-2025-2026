@@ -1,9 +1,11 @@
+#include <omp.h>
 #include "analyzer.h"
 
+#include <atomic>
 #include <queue>
 
 double graph_analyzer::get_density() const {
-    size_t max_edges = g.amount_vertexes * (g.amount_vertexes - 1) / 2;
+    size_t max_edges = g.amount_vertexes() * (g.amount_vertexes() - 1) / 2;
     return static_cast<double>(g.amount_edges) / static_cast<double>(max_edges);
 }
 
@@ -71,7 +73,14 @@ double graph_analyzer::get_average_clustering_coefficient() {
 }
 
 size_t graph_analyzer::get_amount_of_triangles() const {
-    return get_amount_of_closed_triplets() * 3;
+    static size_t last_amount_vertexes = 0;
+    static size_t last_triangles = 0;
+    if (last_amount_vertexes == g.amount_vertexes()) {
+        return last_triangles;
+    }
+    last_amount_vertexes = g.amount_vertexes();
+    last_triangles = get_amount_of_closed_triplets() * 3;
+    return last_triangles;
 }
 
 // CC means Connected Components
@@ -111,8 +120,7 @@ void graph_analyzer::CC_directed_bfs(const int v) {
 vector<set<int>> graph_analyzer::get_CCs() {
     const auto v_list = g.get_vertexes();
 
-    g.calculate_amount_of_vertexes();
-    CC_comp_id.reserve(g.amount_vertexes);
+    CC_comp_id.reserve(g.amount_vertexes());
     for (auto v : v_list) CC_comp_id[v] = -1;
 
     int c = 0;
@@ -181,9 +189,11 @@ void graph_analyzer::SCC_dfs2(const int v) {
 }
 
 size_t graph_analyzer::get_amount_of_opened_triplets() const {
-    size_t amount = 0;
+    atomic_size_t amount = 0;
     auto vertexes = g.get_vertexes();
-    for (auto v : vertexes) {
+    vector<int> vertexes_list(vertexes.begin(), vertexes.end());
+#pragma omp parallel for
+    for (const auto v : vertexes_list) {
         amount += get_amount_of_opened_triplets(v);
     }
     return amount;
@@ -191,7 +201,8 @@ size_t graph_analyzer::get_amount_of_opened_triplets() const {
 
 size_t graph_analyzer::get_amount_of_opened_triplets(const int v) const {
     vector<int>& neighbourhood = g[v];
-    size_t count = 0;
+    atomic_size_t count = 0;
+#pragma omp parallel for
     for (auto second : neighbourhood) {
         for (auto third : g[second]) {
             if (v == third) continue;
@@ -204,11 +215,19 @@ size_t graph_analyzer::get_amount_of_opened_triplets(const int v) const {
 }
 
 size_t graph_analyzer::get_amount_of_closed_triplets() const {
+    static size_t last_amount_vertexes = 0;
+    static size_t last_closed_triplets = 0;
+    if (last_amount_vertexes == g.amount_vertexes()) {
+        return last_closed_triplets;
+    }
+
     size_t amount = 0;
     auto vertexes = g.get_vertexes();
     for (auto v : vertexes) {
         amount += get_amount_of_closed_triplets(v);
     }
+    last_amount_vertexes = g.amount_vertexes();
+    last_closed_triplets = amount;
     return amount;
 }
 
@@ -260,11 +279,11 @@ unordered_map<int, int> graph_analyzer::get_distances_from(const int v) {
     }
     return dist;
 }
-
 size_t graph_analyzer::get_amount_of_closed_triplets(const vector<int>& neighbourhood) const {
-    size_t count = 0;
+    atomic_size_t count = 0;
     for (int j = 0; j < neighbourhood.size(); j++) {
-        size_t k_start = g.type == Undirected ? j + 1 : 0;
+        atomic_size_t k_start = g.type == Undirected ? j + 1 : 0;
+#pragma omp parallel for
         for (size_t k = k_start; k < neighbourhood.size(); k++) {
             int second = neighbourhood[j];
             int third = neighbourhood[k];
@@ -308,23 +327,20 @@ double graph_analyzer::get_average_degree() const {
     for (const auto v : vertexes) {
         sm += get_degree(v);
     }
-    g.calculate_amount_of_vertexes();
-    return static_cast<double>(sm) / static_cast<double>(g.amount_vertexes);
+    return static_cast<double>(sm) / static_cast<double>(g.amount_vertexes());
 }
 
 // Function return probability, which enters in [0, 1], what means random vertex has degree, which equals input degree
 double graph_analyzer::get_probability_that_random_vertex_has_some_degree(size_t degree) {
     if (degrees_counter.empty()) init_degree_counters_cache();
-    if (g.amount_vertexes == 0) g.calculate_amount_of_vertexes();
 
-    return static_cast<double>(degrees_counter[degree]) / static_cast<double>(g.amount_vertexes);
+    return static_cast<double>(degrees_counter[degree]) / static_cast<double>(g.amount_vertexes());
 }
 
 // Function returns log2(probability), which enters in (-infinity, 0], what means random vertex has degree, which enters in...
 // ... [2 ^ log2_degree,  2 ^ (log2_degree + 1) )
 double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_log(size_t log2_degree) {
     if (degrees_counter.empty()) init_degree_counters_cache();
-    if (g.amount_vertexes == 0) g.calculate_amount_of_vertexes();
 
     const size_t min_degree = 1 << log2_degree;
     const size_t max_degree = min_degree * 2;
@@ -332,7 +348,7 @@ double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_lo
     for (size_t degree = min_degree; degree < max_degree; degree++) {
         amount += degrees_counter[degree];
     }
-    return std::log2(static_cast<double>(amount) / static_cast<double>(g.amount_vertexes));
+    return std::log2(static_cast<double>(amount) / static_cast<double>(g.amount_vertexes()));
 }
 
 
@@ -350,6 +366,8 @@ void graph_analyzer::init_degree_counters_cache() {
 set<int> graph_analyzer::get_max_CC() {
     auto CCs = get_CCs();
     auto vertexes = g.get_vertexes();
+    if (vertexes.empty()) return {};
+
     set<int> &max_CC = CCs[0];
     for (auto &CC: CCs) {
         if (CC.size() > max_CC.size()) {
@@ -363,7 +381,7 @@ size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes(con
     if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
     if (x == 1) return 0;
 
-    const auto deleting_amount = static_cast<size_t>(x * static_cast<double>(g.amount_vertexes));
+    const auto deleting_amount = static_cast<size_t>(x * static_cast<double>(g.amount_vertexes()));
     for (const auto deleting = other::get_random_n_elements_from_set(g.get_vertexes(), deleting_amount); const auto v : deleting) {
         g.remove_vertex(v);
     }
@@ -374,7 +392,7 @@ size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes_of_
     if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
     if (x == 1) return 0;
 
-    auto deleting_amount = static_cast<size_t>(x * static_cast<double>(g.amount_vertexes));
+    auto deleting_amount = static_cast<size_t>(x * static_cast<double>(g.amount_vertexes()));
     init_degree_counters_cache();
 
     ranges::sort(degrees_vector, other::degree_greater);

@@ -19,17 +19,15 @@ namespace analyzer_tests {
             graph g;
             g.type = type;
 
-            assert(g.amount_vertexes == 0);
+            assert(g.amount_vertexes() == 0);
             assert(g.amount_edges == 0);
 
             g.insert(1, 2);
-            g.calculate_amount_of_vertexes();
-            assert(g.amount_vertexes == 2);
+            assert(g.amount_vertexes() == 2);
             assert(g.amount_edges == 1);
 
             g.insert(2, 3);
-            g.calculate_amount_of_vertexes();
-            assert(g.amount_vertexes == 3);
+            assert(g.amount_vertexes() == 3);
             assert(g.amount_edges == 2);
         }
     }
