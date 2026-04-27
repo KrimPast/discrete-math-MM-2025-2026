@@ -2,19 +2,20 @@
 #define ANALYZERS_H
 
 #include <cmath>
-#include <unordered_set>
+#include <unordered_map>
+#include <vector>
+#include <set>
+#include <queue>
 
 #include "general.h"
 
-class graph_analyzer{
+class graph_analyzer {
 public:
     graph& g;
     explicit graph_analyzer(graph& graph) : g(graph) {}
 
     double get_density() const;
 
-    // CC means Connected Components
-    // CSC means Strongly Connected Components
     vector<set<int>> get_CCs();
     vector<set<int>> get_SCCs();
 
@@ -47,52 +48,56 @@ public:
     size_t get_size_of_max_CC_after_delete_x_percentage_vertexes(double x);
     size_t get_size_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(double x);
 
-    size_t estimate_diameter_of_max_CC_from_double_sweep(); // 2a
-    size_t estimate_diameter_of_max_CC_from_sample(int sample_size = 1000); // 2b
-    double estimate_90th_percentile_of_max_CC_from_sample(int sample_size = 1000);
-    size_t estimate_diameter_of_max_CC_from_snowball(int target_size = 1000); // 2c
-    double estimate_90th_percentile_of_max_CC_from_snowball(int target_size = 1000);
+    size_t estimate_diameter_of_max_CC_from_double_sweep();
+    size_t estimate_diameter_of_max_CC_from_sample(int sample_size = 1000);
+    size_t estimate_90th_percentile_of_max_CC_from_sample(int sample_size = 1000);
+    size_t estimate_diameter_of_max_CC_from_snowball(int target_size = 1000);
+    size_t estimate_90th_percentile_of_max_CC_from_snowball(int target_size = 1000);
 
-    vector<int> pairwise_distances_in_component(const vector<int> &sample);
-
-    vector<int> pairwise_distances_in_subset(const set<int> &subset);
-
-    double get_average_clustering_coefficient_max_CC(); // 4
+    double get_average_clustering_coefficient_max_CC();
 
 private:
-    // For searching connected components
+    // Connected components
     unordered_map<int, int> CC_comp_id;
     graph rg; // reversed graph
-
     void CC_undirected_bfs(int v);
     void CC_directed_bfs(int v);
 
-    // For searching strongly connected components
+    // Strongly connected components
     unordered_map<int, bool> SCC_visited;
     vector<int> SCC_order;
     set<int> SCC_component;
     void SCC_dfs1(int v);
     void SCC_dfs2(int v);
 
-    // For double swap
+    // Double sweep / BFS
     pair<int, int> find_farthest_vertex_by_bfs(int v);
     unordered_map<int, int> get_distances_from(int v);
 
-    // For measuring global clustering coefficient
+    // Landmark-based fast distance estimation
+    static constexpr int DEFAULT_NUM_LANDMARKS = 30;
+    int num_landmarks = DEFAULT_NUM_LANDMARKS;
+    bool landmarks_built = false;
+    vector<int> landmark_ids;
+    unordered_map<int, vector<int>> landmark_dist;
+
+    void ensure_landmarks_built();
+    void build_landmarks();
+    int estimate_distance(int s, int t) const;
+
+    // Global clustering
     size_t get_amount_of_closed_triplets(const vector<int>& neighbourhood) const;
 
-    // For measuring probabilities function of degrees
+    // Degree distribution
     unordered_map<size_t, size_t> degrees_counter;
-    vector<pair<size_t, int>> degrees_vector; // first - degree, second - vertex
+    vector<pair<size_t, int>> degrees_vector;
     void init_degree_counters_cache();
 
-    // For measuring sizes after deletes
+    // Max CC handling
     set<int> get_max_CC();
 
-    // For snowball
+    // Snowball
     set<int> build_snowball_sample(int target_size);
-
-    unordered_map<int, int> get_distances_in_subset(int v, const set<int> &allowed);
 };
 
 #endif // ANALYZERS_H

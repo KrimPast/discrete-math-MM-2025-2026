@@ -69,19 +69,20 @@ namespace graph_tests {
         g.type = Directed;
         g.insert(1, 10);
         g.insert(10, 2);
+        g.insert(10, 5);
         g.insert(2, 3);
 
         g.insert(1, 2);
-        g.calculate_amount_of_vertexes();
 
         g.remove_vertex(10);
 
         assert(g[1] == vector({2}));
         assert(g[2] == vector({3}));
-        assert(g[3].empty());
-        assert(g[10].empty());
+        assert(!g.contains(3));
+        assert(!g.contains(5));
+        assert(!g.contains(10));
 
-        assert(g.amount_vertexes == 3);
+        assert(g.amount_vertexes() == 3);
         assert(g.amount_edges == 2);
     }
 
@@ -93,15 +94,14 @@ namespace graph_tests {
         g.insert(2, 3);
 
         g.insert(1, 2);
-        g.calculate_amount_of_vertexes();
         g.remove_vertex(10);
 
         assert(g[1] == vector({2}));
         assert(g[2] == vector({3, 1}));
         assert(g[3] == vector({2}));
-        assert(g[10].empty());
+        assert(!g.contains(10));
 
-        assert(g.amount_vertexes == 3);
+        assert(g.amount_vertexes() == 3);
         assert(g.amount_edges == 2);
     }
 
@@ -136,8 +136,7 @@ namespace graph_tests {
         g.insert(3, 6);
         g.insert(8, 6);
         g.insert(9, 1);
-        g.calculate_amount_of_vertexes();
-        assert(g.amount_vertexes == 6);
+        assert(g.amount_vertexes() == 6);
     }
 }
 

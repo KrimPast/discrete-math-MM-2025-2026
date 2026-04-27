@@ -15,12 +15,10 @@ graph parser::parse(const string &file_path) {
     if (in.is_open()) {
         string line;
         while (getline(in, line)) {
-            auto action = whatWeDoWithIt(line);
-            switch (action) {
+            switch (whatWeDoWithIt(line)) {
                 case TryParseEdge:
                 {
-                    edge new_edge = try_parse_edge(line);
-                    if (new_edge != null_edge) // If one of many strokes in invalid, we only send warning
+                    if (edge new_edge = try_parse_edge(line); new_edge != null_edge) // If one of many strokes in invalid, we only send warning
                         g.insert(new_edge.first, new_edge.second);
                     break;
                 }
@@ -38,12 +36,11 @@ graph parser::parse(const string &file_path) {
         }
     }
     if (metadata != null_edge) {
-        g.calculate_amount_of_vertexes();
-        if (metadata.first != g.amount_vertexes)
-            cerr << "(warning) parse: Real amount of vertexes is not equal expected (" << metadata.first << "!= " <<
-                g.amount_vertexes << ")" << endl;
+        if (metadata.first != g.amount_vertexes())
+            cerr << "(warning) parse: Real amount of vertexes is not equal expected (" << metadata.first << " != " <<
+                g.amount_vertexes() << ")" << endl;
         if (metadata.second != g.amount_edges)
-            cerr << "(warning) parse: Real amount of edges is not equal expected (" << metadata.second << "!= " <<
+            cerr << "(warning) parse: Real amount of edges is not equal expected (" << metadata.second << " != " <<
                 g.amount_edges << ")" << endl;
     }
     in.close();
