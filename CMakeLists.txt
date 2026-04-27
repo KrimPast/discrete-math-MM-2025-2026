@@ -5,8 +5,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 project(discrete_math_MM_2025_2026)
 
-set(CMAKE_CXX_STANDARD 20)
-add_compile_options(-fopenmp)
+set(CMAKE_CXX_STANDARD 26)
+add_compile_options(-fopenmp -O2)
 add_link_options(-fopenmp)
 
 add_executable(discrete_math_MM_2025_2026 main.cpp

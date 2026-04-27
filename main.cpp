@@ -64,10 +64,10 @@ int main() {
      string graph_path = project_path + "/datasets/undirected/Email-EuAll.txt";
      string summarized_path = project_path + "/summarized/" + filesystem::path(graph_path).filename().string() + ".json";
 
-     summarizer::sum_up(graph_path, summarized_path);
-     json_example();
+     // summarizer::sum_up(graph_path, summarized_path);
+     // json_example();
 
-     // parse_example();
+     parse_example();
 
 
      return 0;
