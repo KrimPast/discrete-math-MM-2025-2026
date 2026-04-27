@@ -3,7 +3,7 @@
 #include <queue>
 
 double graph_analyzer::get_density() const {
-    size_t max_edges = g.amount_vertexes / 2 * (g.amount_vertexes - 1);
+    size_t max_edges = g.amount_vertexes * (g.amount_vertexes - 1) / 2;
     return static_cast<double>(g.amount_edges) / static_cast<double>(max_edges);
 }
 
@@ -75,23 +75,41 @@ size_t graph_analyzer::get_amount_of_triangles() const {
 }
 
 // CC means Connected Components
-void graph_analyzer::CC_undirected_dfs(const int v) {
-    for (auto o : g[v]) {
-        if (CC_comp_id[o] != -1) continue;
-        CC_comp_id[o] = CC_comp_id[v];
-        CC_undirected_dfs(o);
+void graph_analyzer::CC_undirected_bfs(const int v) {
+    queue<int> q;
+    q.push(v);
+    while (!q.empty()) {
+        int cur = q.front(); q.pop();
+        for (int o : g[cur]) {
+            if (CC_comp_id[o] == -1) {
+                CC_comp_id[o] = CC_comp_id[cur];
+                q.push(o);
+            }
+        }
     }
 }
-void graph_analyzer::CC_directed_dfs(const int v) {
-    CC_undirected_dfs(v);
-    for (auto o : rg[v]) {
-        if (CC_comp_id[o] != -1) continue;
-        CC_comp_id[o] = CC_comp_id[v];
-        CC_directed_dfs(o);
+void graph_analyzer::CC_directed_bfs(const int v) {
+    queue<int> q;
+    q.push(v);
+    while (!q.empty()) {
+        int cur = q.front(); q.pop();
+        for (int o : g[cur]) {
+            if (CC_comp_id[o] == -1) {
+                CC_comp_id[o] = CC_comp_id[cur];
+                q.push(o);
+            }
+        }
+        for (int o : rg[cur]) {
+            if (CC_comp_id[o] == -1) {
+                CC_comp_id[o] = CC_comp_id[cur];
+                q.push(o);
+            }
+        }
     }
 }
+
 vector<set<int>> graph_analyzer::get_CCs() {
-    auto v_list = g.get_vertexes();
+    const auto v_list = g.get_vertexes();
 
     g.calculate_amount_of_vertexes();
     CC_comp_id.reserve(g.amount_vertexes);
@@ -99,21 +117,19 @@ vector<set<int>> graph_analyzer::get_CCs() {
 
     int c = 0;
     if (g.type == Undirected) {
-        // For search CC in undirected graph just use DFS
         for (auto v : v_list) {
             if (CC_comp_id[v] != -1) continue;
             CC_comp_id[v] = c++;
-            CC_undirected_dfs(v);
+            CC_undirected_bfs(v);
         }
     }
     else if (g.type == Directed) {
-        // For search CC in dir-graph, firstly, init reversed graph and, secondly, use DFS on both graphs
         if (rg.empty()) rg = g.get_reversed();
 
         for (auto v : v_list) {
             if (CC_comp_id[v] != -1) continue;
             CC_comp_id[v] = c++;
-            CC_directed_dfs(v);
+            CC_directed_bfs(v);
         }
     }
 
@@ -135,10 +151,9 @@ vector<set<int>> graph_analyzer::get_SCCs() {
     }
     SCC_visited.clear();
     auto components = vector<set<int>>();
-    size_t n = SCC_order.size();
+    const size_t n = SCC_order.size();
     for (int i = 0; i < n; i++) {
-        int v = SCC_order[n - i - 1];
-        if (!SCC_visited[v]) {
+        if (int v = SCC_order[n - i - 1]; !SCC_visited[v]) {
             SCC_dfs2(v);
             components.push_back(SCC_component);
             SCC_component.clear();
@@ -217,7 +232,7 @@ pair<int, int> graph_analyzer::find_farthest_vertex_by_bfs(const int v) {
 
 unordered_map<int, int> graph_analyzer::get_distances_from(const int v) {
     unordered_map<int, int> dist;
-    std::queue<int> q;
+    queue<int> q;
     dist[v] = 0;
     q.push(v);
 
@@ -279,18 +294,18 @@ size_t graph_analyzer::get_min_degree() const {
 }
 
 size_t graph_analyzer::get_max_degree() const {
-    auto vertexes = g.get_vertexes();
+    const auto vertexes = g.get_vertexes();
     size_t mx = 0;
-    for (auto v : vertexes) {
+    for (const auto v : vertexes) {
         mx = max(mx, get_degree(v));
     }
     return mx;
 }
 
 double graph_analyzer::get_average_degree() const {
-    auto vertexes = g.get_vertexes();
+    const auto vertexes = g.get_vertexes();
     size_t sm = 0;
-    for (auto v : vertexes) {
+    for (const auto v : vertexes) {
         sm += get_degree(v);
     }
     g.calculate_amount_of_vertexes();
@@ -311,8 +326,8 @@ double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_lo
     if (degrees_counter.empty()) init_degree_counters_cache();
     if (g.amount_vertexes == 0) g.calculate_amount_of_vertexes();
 
-    size_t min_degree = 1 << log2_degree;
-    size_t max_degree = min_degree * 2;
+    const size_t min_degree = 1 << log2_degree;
+    const size_t max_degree = min_degree * 2;
     size_t amount = 0;
     for (size_t degree = min_degree; degree < max_degree; degree++) {
         amount += degrees_counter[degree];
@@ -348,9 +363,8 @@ size_t graph_analyzer::get_size_of_max_CC_after_delete_x_percentage_vertexes(con
     if (x < 0 || x > 1) throw runtime_error("X must be between 0 and 1");
     if (x == 1) return 0;
 
-    auto deleting_amount = static_cast<size_t>(x * static_cast<double>(g.amount_vertexes));
-    auto deleting = other::get_random_n_elements_from_set(g.get_vertexes(), deleting_amount);
-    for (auto v : deleting) {
+    const auto deleting_amount = static_cast<size_t>(x * static_cast<double>(g.amount_vertexes));
+    for (const auto deleting = other::get_random_n_elements_from_set(g.get_vertexes(), deleting_amount); const auto v : deleting) {
         g.remove_vertex(v);
     }
     return get_max_CC().size();
@@ -409,40 +423,6 @@ double graph_analyzer::estimate_90th_percentile_of_max_CC_from_sample(const int 
     ranges::sort(dists);
     const size_t idx = (dists.size() - 1) * 9 / 10;
     return dists[idx];
-}
-
-unordered_map<int, int> graph_analyzer::get_distances_in_subset(const int v, const set<int>& allowed)
-{
-    unordered_map<int, int> dist;
-    queue<int> q;
-    if (!allowed.contains(v)) return dist;
-
-    dist[v] = 0;
-    q.push(v);
-
-    if (g.type == Directed && rg.empty())
-        rg = g.get_reversed();
-
-    while (!q.empty()) {
-        int cur = q.front(); q.pop();
-
-        for (int to : g[cur]) {
-            if (allowed.contains(to) && !dist.contains(to)) {
-                dist[to] = dist[cur] + 1;
-                q.push(to);
-            }
-        }
-
-        if (g.type == Directed) {
-            for (int to : rg[cur]) {
-                if (allowed.contains(to) && !dist.contains(to)) {
-                    dist[to] = dist[cur] + 1;
-                    q.push(to);
-                }
-            }
-        }
-    }
-    return dist;
 }
 
 double graph_analyzer::get_average_clustering_coefficient_max_CC() {
@@ -504,6 +484,40 @@ set<int> graph_analyzer::build_snowball_sample(const int target_size) {
     return sample;
 }
 
+unordered_map<int, int> graph_analyzer::get_distances_in_subset(const int v, const set<int>& allowed)
+{
+    unordered_map<int, int> dist;
+    queue<int> q;
+    if (!allowed.contains(v)) return dist;
+
+    dist[v] = 0;
+    q.push(v);
+
+    if (g.type == Directed && rg.empty())
+        rg = g.get_reversed();
+
+    while (!q.empty()) {
+        int cur = q.front(); q.pop();
+
+        for (int to : g[cur]) {
+            if (allowed.contains(to) && !dist.contains(to)) {
+                dist[to] = dist[cur] + 1;
+                q.push(to);
+            }
+        }
+
+        if (g.type == Directed) {
+            for (int to : rg[cur]) {
+                if (allowed.contains(to) && !dist.contains(to)) {
+                    dist[to] = dist[cur] + 1;
+                    q.push(to);
+                }
+            }
+        }
+    }
+    return dist;
+}
+
 size_t graph_analyzer::estimate_diameter_of_max_CC_from_snowball(const int target_size) {
     const auto snowball = build_snowball_sample(target_size);
     if (snowball.size() < 2) return 0;
@@ -521,7 +535,7 @@ double graph_analyzer::estimate_90th_percentile_of_max_CC_from_snowball(const in
     if (dists.empty()) return 0.0;
 
     ranges::sort(dists);
-    size_t idx = (dists.size() - 1) * 9 / 10;
+    const size_t idx = (dists.size() - 1) * 9 / 10;
     return dists[idx];
 }
 
@@ -555,3 +569,5 @@ vector<int> graph_analyzer::pairwise_distances_in_subset(const set<int>& subset)
     }
     return result;
 }
+
+

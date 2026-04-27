@@ -2,6 +2,7 @@
 #define ANALYZERS_H
 
 #include <cmath>
+#include <unordered_set>
 
 #include "general.h"
 
@@ -52,6 +53,10 @@ public:
     size_t estimate_diameter_of_max_CC_from_snowball(int target_size = 1000); // 2c
     double estimate_90th_percentile_of_max_CC_from_snowball(int target_size = 1000);
 
+    vector<int> pairwise_distances_in_component(const vector<int> &sample);
+
+    vector<int> pairwise_distances_in_subset(const set<int> &subset);
+
     double get_average_clustering_coefficient_max_CC(); // 4
 
 private:
@@ -59,8 +64,8 @@ private:
     unordered_map<int, int> CC_comp_id;
     graph rg; // reversed graph
 
-    void CC_undirected_dfs(int v);
-    void CC_directed_dfs(int v);
+    void CC_undirected_bfs(int v);
+    void CC_directed_bfs(int v);
 
     // For searching strongly connected components
     unordered_map<int, bool> SCC_visited;
@@ -86,10 +91,8 @@ private:
 
     // For snowball
     set<int> build_snowball_sample(int target_size);
-    unordered_map<int, int> get_distances_in_subset(int v, const set<int>& allowed);
 
-    vector<int> pairwise_distances_in_component(const vector<int>& sample);
-    vector<int> pairwise_distances_in_subset(const set<int>& subset);
+    unordered_map<int, int> get_distances_in_subset(int v, const set<int> &allowed);
 };
 
 #endif // ANALYZERS_H
