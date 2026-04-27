@@ -3,13 +3,14 @@
 
 #include <any>
 #include <cmath>
+#include <unordered_set>
 
 #include "general.h"
 
 class graph_analyzer{
 public:
     graph& g;
-    graph_analyzer(graph& graph) : g(graph) {}
+    explicit graph_analyzer(graph& graph) : g(graph) {}
 
     double get_density() const;
 
@@ -46,13 +47,26 @@ public:
 
     size_t get_size_of_max_CC_after_delete_x_percentage_vertexes(double x);
     size_t get_size_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(double x);
+
+    size_t estimate_diameter_of_max_CC_from_double_sweep(); // 2a
+    size_t estimate_diameter_of_max_CC_from_sample(int sample_size = 1000); // 2b
+    double estimate_90th_percentile_of_max_CC_from_sample(int sample_size = 1000);
+    size_t estimate_diameter_of_max_CC_from_snowball(int target_size = 1000); // 2c
+    double estimate_90th_percentile_of_max_CC_from_snowball(int target_size = 1000);
+
+    vector<int> pairwise_distances_in_component(const vector<int> &sample);
+
+    vector<int> pairwise_distances_in_subset(const set<int> &subset);
+
+    double get_average_clustering_coefficient_max_CC(); // 4
+
 private:
     // For searching connected components
     unordered_map<int, int> CC_comp_id;
     graph rg; // reversed graph
 
-    void CC_undirected_dfs(int v);
-    void CC_directed_dfs(int v);
+    void CC_undirected_bfs(int v);
+    void CC_directed_bfs(int v);
 
     // For searching strongly connected components
     unordered_map<int, bool> SCC_visited;
@@ -61,8 +75,12 @@ private:
     void SCC_dfs1(int v);
     void SCC_dfs2(int v);
 
+    // For double swap
+    pair<int, int> find_farthest_vertex_by_bfs(int v);
+    unordered_map<int, int> get_distances_from(int v);
+
     // For measuring global clustering coefficient
-    size_t get_amount_of_closed_triplets(int v, const vector<int>& neighbourhood) const;
+    size_t get_amount_of_closed_triplets(const vector<int>& neighbourhood) const;
 
     // For measuring probabilities function of degrees
     unordered_map<size_t, size_t> degrees_counter;
@@ -71,6 +89,11 @@ private:
 
     // For measuring sizes after deletes
     set<int> get_max_CC();
+
+    // For snowball
+    set<int> build_snowball_sample(int target_size);
+
+    unordered_map<int, int> get_distances_in_subset(int v, const set<int> &allowed);
 };
 
 #endif // ANALYZERS_H
