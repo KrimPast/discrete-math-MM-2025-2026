@@ -90,7 +90,7 @@ private:
     int estimate_distance(int s, int t) const;
 
     // Global clustering
-    size_t get_amount_of_closed_triplets(const vector<int>& neighbourhood) const;
+    size_t get_amount_of_closed_triplets(const unordered_set<int>& neighbourhood) const;
 
     // Degree distribution
     unordered_map<size_t, size_t> degrees_counter;

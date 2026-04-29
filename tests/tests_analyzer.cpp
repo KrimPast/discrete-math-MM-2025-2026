@@ -32,6 +32,7 @@ namespace analyzer_tests {
         }
     }
     void test_undirected_local_clustering_coefficient() {
+        // Test from: https://en.wikipedia.org/wiki/Clustering_coefficient
         graph g;
         g.type = Undirected;
         g.insert(1, 2);

@@ -137,15 +137,17 @@ void parse_example(dataset dgraph) {
         measure(fraction_of_vertexes_in_max_SCC, "fraction of ver in max SCC",     [&]{ return analyzer.get_fraction_of_vertexes_in_max_SCC(); });
     }
 
-
     // Warning! These functions break the graph
+    if (g.type == Undirected) {
+        measure(probability_that_random_vertex_has_degree_less_than_some_degree, "probab. that v. has degree less",
+                [&] { return analyzer.get_probabilities_that_random_vertex_has_less_than_some_degree(); });
+    }
+
     graph g_copy = g;
     measure(sizes_of_max_CC_after_delete_x_percent_random_vertexes, "delete 0% - 100% random vertexes",
             [&] { return analyzer.get_sizes_of_max_CC_after_delete_x_percentage_vertexes(); });
 
     if (g.type == Undirected) {
-        measure(probability_that_random_vertex_has_degree_less_than_some_degree, "probab. that v. has degree less",
-                [&] { return analyzer.get_probabilities_that_random_vertex_has_less_than_some_degree(); });
         measure(sizes_of_max_CC_after_delete_x_percent_max_degreed_vertexes, "delete 0% - 100% max degreed vertexes",
                 [&] { return graph_analyzer(g_copy).get_sizes_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(); });
     }

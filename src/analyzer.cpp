@@ -4,6 +4,8 @@
 
 #include "analyzer.h"
 
+#include <chrono>
+
 double graph_analyzer::get_density() const {
     const size_t max_edges = g.amount_vertexes() * (g.amount_vertexes() - 1) / 2;
     return static_cast<double>(g.amount_edges) / static_cast<double>(max_edges);
@@ -38,22 +40,26 @@ double graph_analyzer::get_local_clustering_coefficient(const int v) {
     if (g.type == Undefined) {
         throw runtime_error("get_local_clustering_coefficient: Cannot on undefined graph!\n");
     }
-    set neighbourhood_set(g[v].begin(), g[v].end());
+    static unordered_map<int, double> cache;
+    if (cache.contains(v)) return cache[v];
 
+    // Объяснение, что здесь происходит:
+    // https://en.wikipedia.org/wiki/Clustering_coefficient#Local_clustering_coefficient
+
+    unordered_set<int> neighborhood = g[v];
     if (g.type == Directed) {
         if (rg.empty()) rg = g.get_reversed();
-        neighbourhood_set.insert(rg[v].begin(), rg[v].end());
+        neighborhood.insert_range(rg[v]);
     }
-    const vector neighbourhood_list(neighbourhood_set.begin(), neighbourhood_set.end());
-    neighbourhood_set.clear();
 
-    size_t count = get_amount_of_closed_triplets(neighbourhood_list);
-    if (g.type == Undirected) count *= 2;
+    size_t count = get_amount_of_closed_triplets(neighborhood);
+    const size_t neighbours = neighborhood.size();
+    size_t max_count = neighbours * (neighbours - 1);
+    if (g.type == Undirected) max_count /= 2;
 
-    const size_t neighbours = neighbourhood_list.size();
-    const size_t max_count = neighbours * (neighbours - 1);
     if (max_count == 0) return 0; // means vertex doesn't have third neighbor
-    return static_cast<double>(count) / static_cast<double>(max_count);
+    cache[v] = static_cast<double>(count) / static_cast<double>(max_count);
+    return cache[v];
 }
 
 double graph_analyzer::get_global_clustering_coefficient() const {
@@ -65,22 +71,14 @@ double graph_analyzer::get_global_clustering_coefficient() const {
 
 double graph_analyzer::get_average_clustering_coefficient() {
     double amount = 0;
-    const auto vertexes = g.get_vertexes();
-    for (const auto v : vertexes) {
+    for (const auto v : g.vertexes) {
         amount += get_local_clustering_coefficient(v);
     }
-    return amount / static_cast<double>(vertexes.size());
+    return amount / static_cast<double>(g.amount_vertexes());
 }
 
 size_t graph_analyzer::get_amount_of_triangles() const {
-    static size_t last_amount_vertexes = 0;
-    static size_t last_triangles = 0;
-    if (last_amount_vertexes == g.amount_vertexes()) {
-        return last_triangles;
-    }
-    last_amount_vertexes = g.amount_vertexes();
-    last_triangles = get_amount_of_closed_triplets() * 3;
-    return last_triangles;
+    return get_amount_of_closed_triplets() * 3;
 }
 
 // CC means Connected Components
@@ -118,14 +116,12 @@ void graph_analyzer::CC_directed_bfs(const int v) {
 }
 
 vector<set<int>> graph_analyzer::get_CCs() {
-    const auto v_list = g.get_vertexes();
-
     CC_comp_id.reserve(g.amount_vertexes());
-    for (auto v : v_list) CC_comp_id[v] = -1;
+    for (auto v : g.vertexes) CC_comp_id[v] = -1;
 
     int c = 0;
     if (g.type == Undirected) {
-        for (auto v : v_list) {
+        for (auto v : g.vertexes) {
             if (CC_comp_id[v] != -1) continue;
             CC_comp_id[v] = c++;
             CC_undirected_bfs(v);
@@ -134,7 +130,7 @@ vector<set<int>> graph_analyzer::get_CCs() {
     else if (g.type == Directed) {
         if (rg.empty()) rg = g.get_reversed();
 
-        for (auto v : v_list) {
+        for (auto v : g.vertexes) {
             if (CC_comp_id[v] != -1) continue;
             CC_comp_id[v] = c++;
             CC_directed_bfs(v);
@@ -142,7 +138,7 @@ vector<set<int>> graph_analyzer::get_CCs() {
     }
 
     auto components_list = vector<set<int>>(c);
-    for (auto v : v_list) {
+    for (auto v : g.vertexes) {
         components_list[CC_comp_id[v]].insert(v);
     }
     CC_comp_id.clear();
@@ -151,9 +147,8 @@ vector<set<int>> graph_analyzer::get_CCs() {
 
 vector<set<int>> graph_analyzer::get_SCCs() {
     if (g.type != Directed) throw runtime_error("get_SCCs: SCCs exists only in directed graph!");
-    const auto v_list = g.get_vertexes();
     if (rg.empty()) rg = g.get_reversed();
-    for (auto v : v_list) {
+    for (auto v : g.vertexes) {
         if (!SCC_visited[v])
             SCC_dfs1(v);
     }
@@ -189,24 +184,31 @@ void graph_analyzer::SCC_dfs2(const int v) {
 }
 
 size_t graph_analyzer::get_amount_of_opened_triplets() const {
-    atomic_size_t amount = 0;
-    auto vertexes = g.get_vertexes();
-    const vector vertexes_list(vertexes.begin(), vertexes.end());
-#pragma omp parallel for default(none) shared(vertexes_list, amount, g)
-    for (const auto v : vertexes_list) {
-        amount += get_amount_of_opened_triplets(v);
+    static size_t last_vertexes = 0;
+    static atomic_size_t last_amount = 0;
+
+    if (last_vertexes == g.amount_vertexes()) {
+        return last_amount;
     }
-    return amount;
+    last_amount = 0;
+    last_vertexes = g.amount_vertexes();
+
+    const vector vertexes_list(g.vertexes.begin(), g.vertexes.end());
+#pragma omp parallel for default(none) shared(vertexes_list, last_amount, g)
+    for (const auto v : vertexes_list) {
+        last_amount += get_amount_of_opened_triplets(v);
+    }
+    return last_amount;
 }
 
 size_t graph_analyzer::get_amount_of_opened_triplets(const int v) const {
-    const vector<int>& neighbourhood = g[v];
+    const auto& neighbourhood = g[v];
     atomic_size_t count = 0;
-#pragma omp parallel for default(none) shared(neighbourhood, g, v, count)
+// #pragma omp parallel for default(none) shared(neighbourhood, g, v, count)
     for (auto second : neighbourhood) {
         for (auto third : g[second]) {
             if (v == third) continue;
-            if (find(g[v].begin(), g[v].end(), third) == g[v].end()) {
+            if (!neighbourhood.contains(third)) {
                 ++count;
             }
         }
@@ -222,7 +224,7 @@ size_t graph_analyzer::get_amount_of_closed_triplets() const {
     }
 
     size_t amount = 0;
-    for (const auto vertexes = g.get_vertexes(); const auto v : vertexes) {
+    for (const auto v : g.vertexes) {
         amount += get_amount_of_closed_triplets(v);
     }
     last_amount_vertexes = g.amount_vertexes();
@@ -231,8 +233,20 @@ size_t graph_analyzer::get_amount_of_closed_triplets() const {
 }
 
 size_t graph_analyzer::get_amount_of_closed_triplets(const int v) const {
-    const vector<int>& neighbourhood = g[v];
-    return get_amount_of_closed_triplets(neighbourhood);
+    return get_amount_of_closed_triplets(g[v]);
+}
+size_t graph_analyzer::get_amount_of_closed_triplets(const unordered_set<int>& neighbourhood) const {
+    size_t count = 0;
+    for (auto second : neighbourhood) {
+        // atomic_size_t k_start = g.type == Undirected ? j + 1 : 0;
+        // #pragma omp parallel for default(none) shared(neighbourhood, g, count, j, k_start)
+        for (auto third : neighbourhood) {
+            if (g[second].contains(third)) {
+                ++count;
+            }
+        }
+    }
+    return g.type == Undirected ? count / 2 : count;
 }
 
 pair<int, int> graph_analyzer::find_farthest_vertex_by_bfs(const int v) {
@@ -279,52 +293,35 @@ unordered_map<int, int> graph_analyzer::get_distances_from(const int v) {
     return dist;
 }
 
-size_t graph_analyzer::get_amount_of_closed_triplets(const vector<int>& neighbourhood) const {
-    atomic_size_t count = 0;
-    for (int j = 0; j < neighbourhood.size(); j++) {
-        atomic_size_t k_start = g.type == Undirected ? j + 1 : 0;
-#pragma omp parallel for default(none) shared(neighbourhood, g, count, j, k_start)
-        for (size_t k = k_start; k < neighbourhood.size(); k++) {
-            int second = neighbourhood[j];
-            int third = neighbourhood[k];
-            if (find(g[second].begin(), g[second].end(), third) != g[second].end()) {
-                ++count;
-            }
-        }
-    }
-    return count;
-}
+
 
 size_t graph_analyzer::get_degree(const int v) const {
     if (g.type == Undirected) {
         if (!g.contains(v)) throw runtime_error("get_degree: No such vertex in graph");
-        return g[v].size() + (ranges::find(g[v], v) != g[v].end() ? 1 : 0); // reflexive adds two to degree
+        return g[v].size() + (g[v].contains(v) ? 1 : 0); // reflexive adds two to degree
     }
     throw runtime_error("get_degree: Not implemented for graphs this type");
 }
 
 size_t graph_analyzer::get_min_degree() const {
-    const auto vertexes = g.get_vertexes();
     size_t mn = g.amount_edges;
-    for (const auto v : vertexes) {
+    for (const auto v : g.vertexes) {
         mn = min(mn, get_degree(v));
     }
     return mn;
 }
 
 size_t graph_analyzer::get_max_degree() const {
-    const auto vertexes = g.get_vertexes();
     size_t mx = 0;
-    for (const auto v : vertexes) {
+    for (const auto v : g.vertexes) {
         mx = max(mx, get_degree(v));
     }
     return mx;
 }
 
 double graph_analyzer::get_average_degree() const {
-    const auto vertexes = g.get_vertexes();
     size_t sm = 0;
-    for (const auto v : vertexes) {
+    for (const auto v : g.vertexes) {
         sm += get_degree(v);
     }
     return static_cast<double>(sm) / static_cast<double>(g.amount_vertexes());
@@ -382,7 +379,7 @@ double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_lo
 void graph_analyzer::init_degree_counters_cache() {
     degrees_counter.clear();
     degrees_vector.clear();
-    for (const auto vertexes = g.get_vertexes(); auto v : vertexes) {
+    for (auto v : g.vertexes) {
         size_t degree = get_degree(v);
         ++degrees_counter[degree];
         degrees_vector.emplace_back(degree, v);
@@ -391,7 +388,7 @@ void graph_analyzer::init_degree_counters_cache() {
 
 set<int> graph_analyzer::get_max_CC() {
     auto CCs = get_CCs();
-    if (const auto vertexes = g.get_vertexes(); vertexes.empty()) return {};
+    if (CCs.empty()) return {};
 
     auto &max_CC = CCs[0];
     for (auto &CC: CCs) {
@@ -406,8 +403,7 @@ json graph_analyzer::get_sizes_of_max_CC_after_delete_x_percentage_vertexes() {
     json sizes = {{"0%", get_max_CC().size()}};
     constexpr int steps = 10;
     const long to_delete = g.amount_vertexes() / 10;
-    set<int> deletable_set = g.get_vertexes();
-    vector deletable_list(deletable_set.begin(), deletable_set.end());
+    vector deletable_list(g.vertexes.begin(), g.vertexes.end());
 
     other::shuffle_vector(deletable_list);
     int ind = 0;
@@ -501,7 +497,7 @@ void graph_analyzer::build_landmarks() {
         if (landmark_ids.size() >= num_landmarks) break;
         bool too_close = false;
         for (int chosen : landmark_ids) {
-            if (ranges::find(g[v], chosen) != g[v].end() || ranges::find(g[chosen], v) != g[chosen].end()) {
+            if (g[v].contains(chosen) || g[chosen].contains(v)) {
                 too_close = true;
                 break;
             }
@@ -519,7 +515,7 @@ void graph_analyzer::build_landmarks() {
         }
     }
 
-    for (const auto all_vertices = g.get_vertexes(); int v : all_vertices) {
+    for (int v : g.vertexes) {
         landmark_dist[v].assign(num_landmarks, -1);
     }
 
