@@ -1,17 +1,21 @@
 #include "graph.h"
 
+#include <ranges>
+
 void graph::insert(const int from, const int to) {
     if (type == Undefined) throw runtime_error("insert: graph type is undefined");
 
-    vector<int> &neighbors = (*this)[from];
-    if (ranges::find(neighbors, to) != neighbors.end())
+    if ((*this)[from].contains(to))
         return; // Удивительно, но такие графы есть
+
     ++vertex_counter[from];
     ++vertex_counter[to];
+    vertexes.insert(from);
+    vertexes.insert(to);
 
-    (*this)[from].push_back(to);
+    (*this)[from].insert(to);
     if (type == Undirected && from != to) {
-        (*this)[to].push_back(from);
+        (*this)[to].insert(from);
     }
     ++amount_edges;
 }
@@ -19,55 +23,52 @@ void graph::remove(const int from, const int to) {
     if (type == Undefined) throw runtime_error("insert: graph type is undefined");
     if (!contains(from)) return;
 
-    std::erase((*this)[from], to);
+    (*this)[from].erase(to);
     if ((*this)[from].empty()) erase(from);
 
     if (type == Undirected && from != to) {
-        std::erase((*this)[to], from);
+        (*this)[to].erase(from);
         if ((*this)[to].empty()) erase(to);
     }
 
     --vertex_counter[from];
     --vertex_counter[to];
-    if (vertex_counter[from] == 0) vertex_counter.erase(from);
-    if (vertex_counter[to] == 0) vertex_counter.erase(to);
-
+    if (vertex_counter[from] == 0) {
+        vertex_counter.erase(from);
+        vertexes.erase(from);
+    }
+    if (vertex_counter[to] == 0) {
+        vertex_counter.erase(to);
+        vertexes.erase(to);
+    }
     --amount_edges;
 }
 
-void graph::remove_vertex(int v) {
+void graph::remove_vertex(const int v) {
     if (!contains(v)) return;
     if (type == Undefined) throw runtime_error("remove_vertex: graph type is undefined");
     if (type == Undirected) {
-        auto &neighbors = (*this)[v];
-        for (int i = neighbors.size() - 1; i >= 0; --i) {
-            remove(v, neighbors[i]);
+        const auto& neighbors = (*this)[v];
+        while (neighbors.size() > 0) {
+            remove(v, *neighbors.begin());
         }
-        neighbors.clear();
     }
     else { // type == Directed
-        auto vertexes = get_vertexes();
         for (auto other : vertexes) {
             if (!contains(other)) continue;
+            if (!vertex_counter.contains(v)) break;
+
             auto& other_neighbors = (*this)[other];
-            if (ranges::find(other_neighbors, v) != other_neighbors.end())
+            if (other_neighbors.contains(v))
                 remove(other, v);
         }
-        auto neighbours = (*this)[v];
-        for (auto other : neighbours) {
-            remove(v, other);
+        auto& neighbors = (*this)[v];
+        while (neighbors.size() > 0) {
+            remove(v, *(*this)[v].begin());
         }
     }
     erase(v);
 }
-
-set<int> graph::get_vertexes() const{
-    auto vertexes = set<int>();
-    for (auto v : vertex_counter)
-        vertexes.insert(v.first);
-    return vertexes;
-}
-
 graph graph::get_reversed() const {
     if (type == Undirected) {
         throw runtime_error("get_reversed_graph: You sure that you really need RG by undirected graph?");
@@ -87,7 +88,7 @@ graph graph::get_reversed() const {
     return rg;
 }
 
-size_t graph::amount_vertexes() {
+size_t graph::amount_vertexes() const {
     if (type == Undirected) {
         return size();
     }

@@ -26,8 +26,8 @@ namespace graph_tests {
         g.insert(1, 2);
         g.insert(2, 3);
         g.insert(2, 4);
-        assert(g[1] == vector({2}));
-        assert(g[2] == vector({3, 4}));
+        assert(g[1] == unordered_set({2}));
+        assert(g[2] == unordered_set({3, 4}));
         assert(g[3].empty());
         assert(g[4].empty());
     }
@@ -39,10 +39,10 @@ namespace graph_tests {
         g.insert(2, 3);
         g.insert(2, 4);
         g.insert(3, 4);
-        assert(g[1] == vector({2}));
-        assert(g[2] == vector({1, 3, 4}));
-        assert(g[3] == vector({2, 4}));
-        assert(g[4] == vector({2, 3}));
+        assert(g[1] == unordered_set({2}));
+        assert(g[2] == unordered_set({1, 3, 4}));
+        assert(g[3] == unordered_set({2, 4}));
+        assert(g[4] == unordered_set({2, 3}));
     }
 
     void test_directed_remove_edge() {
@@ -52,7 +52,7 @@ namespace graph_tests {
         g.insert(2, 1);
         g.remove(1, 2);
         assert(g[1].empty());
-        assert(g[2] == vector({1}));
+        assert(g[2] == unordered_set({1}));
     }
 
     void test_undirected_remove_edge() {
@@ -76,8 +76,8 @@ namespace graph_tests {
 
         g.remove_vertex(10);
 
-        assert(g[1] == vector({2}));
-        assert(g[2] == vector({3}));
+        assert(g[1] == unordered_set({2}));
+        assert(g[2] == unordered_set({3}));
         assert(!g.contains(3));
         assert(!g.contains(5));
         assert(!g.contains(10));
@@ -96,9 +96,9 @@ namespace graph_tests {
         g.insert(1, 2);
         g.remove_vertex(10);
 
-        assert(g[1] == vector({2}));
-        assert(g[2] == vector({3, 1}));
-        assert(g[3] == vector({2}));
+        assert(g[1] == unordered_set({2}));
+        assert(g[2] == unordered_set({3, 1}));
+        assert(g[3] == unordered_set({2}));
         assert(!g.contains(10));
 
         assert(g.amount_vertexes() == 3);
@@ -113,7 +113,7 @@ namespace graph_tests {
         g.insert(3, 6);
         g.insert(9, 5);
         g.insert(5, 3);
-        assert(g.get_vertexes() == set({1, 2, 3, 5, 6, 9}));
+        assert(g.vertexes == unordered_set({1, 2, 3, 5, 6, 9}));
     }
 
     void test_undirected_get_vertexes() {
@@ -125,7 +125,7 @@ namespace graph_tests {
         g.insert(6, 1);
 
         g.remove(6, 4);
-        assert(g.get_vertexes() == set({1, 2, 6, 8, 10}));
+        assert(g.vertexes == unordered_set({1, 2, 6, 8, 10}));
     }
 
     void test_calculate_amount_of_vertexes() {
