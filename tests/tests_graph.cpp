@@ -67,6 +67,8 @@ namespace graph_tests {
     void test_directed_remove_vertex() {
         graph g;
         g.type = Directed;
+        auto analyzer = graph_analyzer(g);
+
         g.insert(1, 10);
         g.insert(10, 2);
         g.insert(10, 5);
@@ -74,7 +76,7 @@ namespace graph_tests {
 
         g.insert(1, 2);
 
-        g.remove_vertex(10);
+        analyzer.remove_vertex(10);
 
         assert(g[1] == unordered_set({2}));
         assert(g[2] == unordered_set({3}));
@@ -89,12 +91,14 @@ namespace graph_tests {
     void test_undirected_remove_vertex() {
         graph g;
         g.type = Undirected;
+        auto analyzer = graph_analyzer(g);
+
         g.insert(1, 10);
         g.insert(10, 2);
         g.insert(2, 3);
 
         g.insert(1, 2);
-        g.remove_vertex(10);
+        analyzer.remove_vertex(10);
 
         assert(g[1] == unordered_set({2}));
         assert(g[2] == unordered_set({3, 1}));
