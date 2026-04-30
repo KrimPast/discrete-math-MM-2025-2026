@@ -41,7 +41,12 @@ double graph_analyzer::get_local_clustering_coefficient(const int v) {
         throw runtime_error("get_local_clustering_coefficient: Cannot on undefined graph!\n");
     }
     static unordered_map<int, double> cache;
-    if (cache.contains(v)) return cache[v];
+    static size_t last_amount_edges = 0;
+    if (last_amount_edges != g.amount_edges) {
+        cache.clear();
+    } else if (cache.contains(v)) {
+        return cache[v];
+    }
 
     // Объяснение, что здесь происходит:
     // https://en.wikipedia.org/wiki/Clustering_coefficient#Local_clustering_coefficient
@@ -59,6 +64,8 @@ double graph_analyzer::get_local_clustering_coefficient(const int v) {
 
     if (max_count == 0) return 0; // means vertex doesn't have third neighbor
     cache[v] = static_cast<double>(count) / static_cast<double>(max_count);
+    last_amount_edges = g.amount_edges;
+
     return cache[v];
 }
 
@@ -413,7 +420,7 @@ json graph_analyzer::get_sizes_of_max_CC_after_delete_x_percentage_vertexes() {
             int el = deletable_list[ind++];
 
             long amount_before = g.amount_vertexes();
-            g.remove_vertex(el); // This thing also can delete of neighbors of "el" in special case
+            remove_vertex(el); // This thing also can delete of neighbors of "el" in special case
             long amount_after = g.amount_vertexes();
 
             deleted_on_step -= (amount_before - amount_after);
@@ -440,7 +447,7 @@ json graph_analyzer::get_sizes_of_max_CC_after_delete_x_percentage_vertexes_of_m
         long to_delete_on_step = min(static_cast<size_t>(initial_size * percentage_to_delete_on_each_step[i]), g.amount_vertexes()); // if deleted_on_step = average_delete_step
         long deleted = 0;
         while (deleted < to_delete_on_step) {
-            g.remove_vertex(degrees_vector[ind++].second);
+            remove_vertex(degrees_vector[ind++].second);
             ++deleted;
         }
         string string_percent = std::format("{:.1f}", percentage_to_delete_sum[i] * 100) + '%';
@@ -625,6 +632,31 @@ set<int> graph_analyzer::build_snowball_sample(const int target_size) {
     }
 
     return sample;
+}
+
+void graph_analyzer::remove_vertex(const int v) {
+    if (!g.contains(v)) return;
+    if (g.type == Undefined) throw runtime_error("remove_vertex: graph type is undefined");
+    if (g.type == Undirected) {
+        const auto& neighbors = g[v];
+        while (!neighbors.empty()) {
+            g.remove(v, *neighbors.begin());
+        }
+    }
+    else { // type == Directed
+        if (rg.empty()) rg = g.get_reversed();
+        auto other_neigbours = rg[v];
+        for (auto other : other_neigbours) {
+            g.remove(other, v);
+            rg.remove(v, other);
+        }
+        auto neighbors = g[v];
+        for (auto other : neighbors) {
+            g.remove(v, other);
+            rg.remove(other, v);
+        }
+    }
+    g.erase(v);
 }
 
 size_t graph_analyzer::estimate_diameter_of_max_CC_from_snowball(const int target_size) {

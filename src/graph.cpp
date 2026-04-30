@@ -44,31 +44,7 @@ void graph::remove(const int from, const int to) {
     --amount_edges;
 }
 
-void graph::remove_vertex(const int v) {
-    if (!contains(v)) return;
-    if (type == Undefined) throw runtime_error("remove_vertex: graph type is undefined");
-    if (type == Undirected) {
-        const auto& neighbors = (*this)[v];
-        while (neighbors.size() > 0) {
-            remove(v, *neighbors.begin());
-        }
-    }
-    else { // type == Directed
-        for (auto other : vertexes) {
-            if (!contains(other)) continue;
-            if (!vertex_counter.contains(v)) break;
 
-            auto& other_neighbors = (*this)[other];
-            if (other_neighbors.contains(v))
-                remove(other, v);
-        }
-        auto& neighbors = (*this)[v];
-        while (neighbors.size() > 0) {
-            remove(v, *(*this)[v].begin());
-        }
-    }
-    erase(v);
-}
 graph graph::get_reversed() const {
     if (type == Undirected) {
         throw runtime_error("get_reversed_graph: You sure that you really need RG by undirected graph?");

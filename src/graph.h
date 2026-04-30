@@ -23,7 +23,6 @@ public:
 
     void insert(int from, int to);
     void remove(int from, int to);
-    void remove_vertex(int v);
 
     unordered_set<int> vertexes;
     graph get_reversed() const;
