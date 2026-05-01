@@ -19,7 +19,7 @@ static string output_file;
 enum dataset {
     socwiki, google, notredame, stanford,
     wiki, astro, coauthors, grqc,
-    email, git, orkut, youtube, vk
+    email, git, youtube, vk, orkut,
 };
 map<dataset, string> paths = {
     {socwiki,   "directed/soc-wiki-Vote.mtx"},
@@ -44,7 +44,9 @@ string get_dataset_path(const dataset ds) {
 string get_summarized_path(const dataset ds) {
     return summarized_path + filesystem::path(paths[ds]).replace_extension(".json").string();
 }
-
+string get_dataset_name(const dataset ds) {
+    return filesystem::path(paths[ds]).replace_extension("");
+}
 static bool measure_is_finished;
 
 void print_measure_time(const string& name, const long ms, const auto& result = "") {
@@ -96,10 +98,10 @@ void parse_example(dataset dgraph) {
     output_file = get_summarized_path(dgraph);
     const auto start = std::chrono::steady_clock::now();
 
+    measure(graph_name, "graph name",                                              [&]{ return filesystem::path(get_dataset_path(dgraph)).filename(); });
     measure(undefined_field, "parsing",                                            [&] { g = uni_parser::parse(get_dataset_path(dgraph)); return "----- start tests -----";});
 
     // Base graph data
-    measure(graph_name, "graph name",                                              [&]{ return filesystem::path(get_dataset_path(dgraph)).filename(); });
     measure(graph_type, "graph type",                                                   [&]{ return g.type == Directed ? "Directed" : "Undirected"; });
     measure(amount_of_vertexes, "amount vertexes",                                 [&] { return g.amount_vertexes(); });
     measure(amount_of_edges, "amount edges",                                       [&] { return g.amount_edges; });
@@ -158,12 +160,8 @@ void parse_example(dataset dgraph) {
     measure(undefined_field, "Total execution time",   [&]{ return to_string(ms) + " ms"; });
 }
 
-int main() {
-    // Tests work only in DEBUG build
-    analyzer_tests::tests();
-    graph_tests::tests();
-
-    for (auto p : paths) {
+void parse_examples() {
+    for (const auto& p : paths) {
         bool is_skip = false;
         if (filesystem::exists(get_summarized_path(p.first))) {
             char c;
@@ -184,6 +182,119 @@ int main() {
         output_file = "";
         parse_example(p.first);
     }
+}
+void print_available_datasets() {
+    int i = 0;
+    for (auto p : paths) {
+        cout << i++ << ") "<< get_dataset_name(p.first) << endl;
+    }
+}
+dataset dataset_choose() {
+    string num_str;
+    int num;
+    while (true) {
+        print_available_datasets();
+        cout << "Choose a dataset (0 - " << paths.size() - 1 << "): ";
+        cin >> num_str;
+        try {
+            num = std::stoi(num_str);
+            if (num < 0 || num >= paths.size()) throw runtime_error("...");
+            break;
+        } catch(...) {
+            cout << "Incorrect number!" << endl;
+        }
+    }
+    int i = 0;
+    for (auto el : paths) {
+        if (i == num) {
+            cout << "Successfully graph `" << get_dataset_name(el.first) << "` was chosen!" << endl;
+            return el.first;
+        }
+        i++;
+    }
+    throw runtime_error("dataset_choose: Undefined error!");
+}
+
+void landmarks_basic_research() {
+    const auto path = get_dataset_path(dataset_choose());
+    graph g = uni_parser::parse(path);
+    graph_analyzer analyzer(g);
+
+    vector<function<void(int)>> methods;
+    vector<string> methods_names;
+
+    methods.push_back([&](int x){ analyzer.landmarks_basic_precompute_random(x); });
+    methods.push_back([&](int x){ analyzer.landmarks_basic_precompute_highest_degrees(x); });
+    methods.push_back([&](int x){ analyzer.landmarks_basic_precompute_best_coverage(x); });
+    methods_names.push_back("choosing (random)");
+    methods_names.push_back("choosing (highest degrees)");
+    methods_names.push_back("choosing (best coverage)");
+
+    auto results = vector(methods.size(), vector<size_t>());
+    auto real_results = vector(methods.size(), vector<size_t>());
+    vector shuffled_vertexes(g.vertexes.begin(), g.vertexes.end());
+    other::shuffle_vector(shuffled_vertexes);
+
+    const int amount_vertexes = min(500, static_cast<int>(g.amount_vertexes()));
+    int k;
+    cout << "Enter amount of landmarks: ";
+    cin >> k;
+    for (int i = 0; i < methods.size(); i++) {
+        methods[i](k);
+        const int gap = amount_vertexes * i;
+        for (int j = 0; j < amount_vertexes; j++) {
+            int p1 = shuffled_vertexes[gap + 2 * j];
+            int p2 = shuffled_vertexes[gap + 2 * j + 1];
+            size_t dist = analyzer.landmarks_basic(p1, p2);
+
+            results[i].push_back(dist);
+
+            int real_dist = analyzer.landmarks_get_shortest_path(p1, p2).size() - 2;
+            real_results[i].push_back(real_dist);
+        }
+        cout << "Method " << methods_names[i] << " calculated!" << endl;
+    }
+    cout << endl;
+    for (int i = 0; i < methods.size(); i++) {
+        int count = 0;
+        for (int j = 0; j < amount_vertexes; j++) {
+            if (results[i][j] != UINT_MAX) ++count;
+        }
+        cout << "Method " << methods_names[i]  << " calculated " << count << "/" << amount_vertexes << " distances" << endl;
+    }
+    cout << endl;
+    auto minimals = vector(methods.size(), 0);
+    for (int j = 0; j < amount_vertexes; j++) {
+        size_t mn_dist = UINT_MAX;
+        for (int i = 0; i < methods.size(); i++) {
+            mn_dist = min(mn_dist, results[i][j]);
+        }
+        for (int i = 0; i < methods.size(); i++) {
+            if (mn_dist != UINT_MAX && mn_dist == results[i][j]) ++minimals[i];
+        }
+    }
+    for (int i = 0; i < methods.size(); i++) {
+        cout << "Method " << methods_names[i] << " has " << minimals[i] << "/" << amount_vertexes << " of minimum distances" << endl;
+    }
+    for (int i = 0; i < methods.size(); i++) {
+        size_t size = 0;
+        size_t real_size = 0;
+        for (int j = 0; j < amount_vertexes; j++) {
+            if (real_results[i][j] == UINT_MAX) continue;
+            size += results[i][j];
+            real_size += real_results[i][j];
+        }
+        cout << "Method " << methods_names[i] << " has approximation error: " << static_cast<double>(real_size) / static_cast<double>(size) << endl;
+    }
+}
+int main() {
+    // Tests work only in DEBUG build
+    analyzer_tests::tests();
+    graph_tests::tests();
+
+    // parse_examples();
+
+    landmarks_basic_research();
 
     return 0;
 }

@@ -61,6 +61,12 @@ public:
 
     double get_average_clustering_coefficient_max_CC();
 
+    void landmarks_basic_precompute_random(int k);
+    void landmarks_basic_precompute_highest_degrees(int k);
+    void landmarks_basic_precompute_best_coverage(int k);
+    size_t landmarks_basic(int s, int t);
+    vector<int> landmarks_get_shortest_path(int s, int t) const;
+
 private:
     // Connected components
     unordered_map<int, int> CC_comp_id;
@@ -103,6 +109,13 @@ private:
 
     // Snowball
     set<int> build_snowball_sample(int target_size);
+
+    // Landmarks-basic
+    map<pair<int, int>, size_t> precomputed_vertexes;
+    void landmarks_basic_precompute(int k);
+    vector<int> landmarks;
+    void landmarks_basic_bfs(int s);
+    // unordered_map<int, int> landmarks_visited;
 };
 
 #endif // ANALYZERS_H
