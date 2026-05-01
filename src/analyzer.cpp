@@ -467,6 +467,121 @@ double graph_analyzer::get_average_clustering_coefficient_max_CC() {
     return sum / static_cast<double>(max_cc.size());
 }
 
+void graph_analyzer::landmarks_basic_precompute(int k) {
+    if (g.type != Undirected) throw runtime_error("landmarks_basic_precompute: You can use this only on directed graph!");
+    precomputed_vertexes.clear(); // Очистка предыдущего результата
+
+    for (const auto landmark : landmarks)
+        landmarks_basic_bfs(landmark);
+}
+void graph_analyzer::landmarks_basic_precompute_random(const int k) {
+    landmarks = other::get_random_n_elements(g.vertexes, k);
+    landmarks_basic_precompute(k);
+}
+
+void graph_analyzer::landmarks_basic_precompute_highest_degrees(int k) {
+    if (degrees_vector.empty()) init_degree_counters_cache();
+    ranges::sort(degrees_vector, other::degree_greater);
+    landmarks.clear();
+    for (int i = 0; i < k; i++)
+        landmarks.push_back(degrees_vector[i].second);
+    landmarks_basic_precompute(k);
+}
+vector<int> graph_analyzer::landmarks_get_shortest_path(int s, int t) const {
+    unordered_map<int, int> rec_path = {{s, s}}; // key = vertex, value = last_vertex
+    queue<int> q;
+    q.push(s);
+    bool path_is_exist = false;
+    while (!q.empty()) {
+        int curr = q.front(); q.pop();
+        for (int next : g[curr]) {
+            if (rec_path.contains(next)) continue;
+
+            rec_path[next] = curr;
+            if (next == t) {
+                path_is_exist = true;
+                break;
+            }
+            q.push(next);
+        }
+        if (path_is_exist) break;
+    }
+    if (!path_is_exist) return {};
+
+    int st = t;
+    vector result{t};
+    while (st != s) {
+        st = rec_path[st];
+        result.push_back(st);
+    }
+    return result;
+}
+void graph_analyzer::landmarks_basic_precompute_best_coverage(int k) {
+    const int M = max(k, min(100, static_cast<int>(g.amount_vertexes()))); // samples
+    set<vector<int>> paths;
+    landmarks.clear();
+    for (int i = 0; i < M; i++) {
+        int s = other::random_element(g.vertexes);
+        int t = other::random_element(g.vertexes);
+        vector<int> shortest_path = landmarks_get_shortest_path(s, t);
+        paths.insert(shortest_path);
+    }
+    set<int> found_vertexes;
+    for (auto& path : paths)
+        for (auto el : path)
+            found_vertexes.insert(el);
+    for (int i = 0; i < k; i++) {
+        unordered_map<int, int> c;
+        int max_count = 0;
+        int max_v;
+        for (auto v : found_vertexes) {
+            int count = 0;
+            for (auto& p : paths)
+                if (ranges::find(p, v) != ranges::end(p))
+                    ++count;
+            if (count > max_count) {
+                max_count = count;
+                max_v = v;
+            }
+        }
+        found_vertexes.erase(max_v);
+        landmarks.push_back(max_v);
+    }
+    landmarks_basic_precompute(k);
+}
+
+void graph_analyzer::landmarks_basic_bfs(int v) {
+    queue<pair<int, int>> q;
+    q.emplace(v, 0);
+    precomputed_vertexes[pair(v, v)] = 0;
+
+    while (!q.empty()) {
+        pair curr = q.front(); q.pop();
+        for (int next : g[curr.first]) {
+            auto pair_next = pair(v, next);
+            if (precomputed_vertexes.contains(pair_next)) continue;
+
+            precomputed_vertexes[pair_next] = curr.second + 1;
+            q.emplace(next, curr.second + 1);
+        }
+    }
+}
+
+size_t graph_analyzer::landmarks_basic(int s, int t) {
+    if (g.type != Undirected) throw runtime_error("landmarks_basic: You can use this only on directed graph!");
+    if (precomputed_vertexes.empty() && g.amount_vertexes() > 0) throw runtime_error("landmarks_basic: You should use landmarks_basic_precompute() before landmarks_basic()");
+
+    size_t d_approx = UINT_MAX;
+    for (auto landmark : landmarks) {
+        auto p1 = pair(landmark, s);
+        auto p2 = pair(landmark, t);
+        if (precomputed_vertexes.contains(p1) && precomputed_vertexes.contains(p2)) { // Vertexes may be in different CCs
+            d_approx = min(d_approx, precomputed_vertexes[p1] + precomputed_vertexes[p2]);
+        }
+    }
+    return d_approx;
+}
+
 size_t graph_analyzer::estimate_diameter_of_max_CC_from_double_sweep() {
     const auto max_CC = get_max_CC();
     if (max_CC.empty()) return 0;
@@ -553,7 +668,7 @@ size_t graph_analyzer::estimate_diameter_of_max_CC_from_sample(const int sample_
     if (max_cc.empty()) return 0;
 
     const int k = min(sample_size, static_cast<int>(max_cc.size()));
-    const auto sample = other::get_random_n_elements_from_set(max_cc, k);
+    const auto sample = other::get_random_n_elements(max_cc, k);
 
     size_t diameter = 0;
     for (size_t i = 0; i < sample.size(); ++i) {
@@ -570,7 +685,7 @@ size_t graph_analyzer::estimate_90th_percentile_of_max_CC_from_sample(const int 
     if (max_cc.empty()) return 0;
 
     const int k = min(sample_size, static_cast<int>(max_cc.size()));
-    const auto sample = other::get_random_n_elements_from_set(max_cc, k);
+    const auto sample = other::get_random_n_elements(max_cc, k);
 
     vector<int> dists;
     dists.reserve(k * (k - 1) / 2);
