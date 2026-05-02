@@ -185,7 +185,7 @@ void parse_examples() {
 }
 void print_available_datasets() {
     int i = 0;
-    for (auto p : paths) {
+    for (auto& p : paths) {
         cout << i++ << ") "<< get_dataset_name(p.first) << endl;
     }
 }
@@ -205,13 +205,14 @@ dataset dataset_choose() {
         }
     }
     int i = 0;
-    for (auto el : paths) {
+    for (auto& el : paths) {
         if (i == num) {
             cout << "Successfully graph `" << get_dataset_name(el.first) << "` was chosen!" << endl;
             return el.first;
         }
         i++;
     }
+    cout << 2 << endl;
     throw runtime_error("dataset_choose: Undefined error!");
 }
 
@@ -223,15 +224,15 @@ void landmarks_basic_research() {
     vector<function<void(int)>> methods;
     vector<string> methods_names;
 
-    methods.push_back([&](int x){ analyzer.landmarks_basic_precompute_random(x); });
-    methods.push_back([&](int x){ analyzer.landmarks_basic_precompute_highest_degrees(x); });
-    methods.push_back([&](int x){ analyzer.landmarks_basic_precompute_best_coverage(x); });
-    methods_names.push_back("choosing (random)");
-    methods_names.push_back("choosing (highest degrees)");
-    methods_names.push_back("choosing (best coverage)");
+    methods.emplace_back([&](int x){ analyzer.landmarks_basic_precompute_random(x); });
+    methods.emplace_back([&](int x){ analyzer.landmarks_basic_precompute_highest_degrees(x); });
+    methods.emplace_back([&](int x){ analyzer.landmarks_basic_precompute_best_coverage(x); });
+    methods_names.emplace_back("choosing (random)");
+    methods_names.emplace_back("choosing (highest degrees)");
+    methods_names.emplace_back("choosing (best coverage)");
 
     auto results = vector(methods.size(), vector<size_t>());
-    auto real_results = vector(methods.size(), vector<size_t>());
+    auto real_results = vector<size_t>();
     vector shuffled_vertexes(g.vertexes.begin(), g.vertexes.end());
     other::shuffle_vector(shuffled_vertexes);
 
@@ -239,18 +240,21 @@ void landmarks_basic_research() {
     int k;
     cout << "Enter amount of landmarks: ";
     cin >> k;
+
+    for (int j = 0; j < amount_vertexes; j++) {
+        int p1 = shuffled_vertexes[2 * j];
+        int p2 = shuffled_vertexes[2 * j + 1];
+        size_t real_dist = analyzer.landmarks_get_shortest_path(p1, p2).size() - 2;
+        real_results.push_back(real_dist);
+    }
+    cout << "Real distances precalculated!" << endl;
     for (int i = 0; i < methods.size(); i++) {
         methods[i](k);
-        const int gap = amount_vertexes * i;
         for (int j = 0; j < amount_vertexes; j++) {
-            int p1 = shuffled_vertexes[gap + 2 * j];
-            int p2 = shuffled_vertexes[gap + 2 * j + 1];
+            int p1 = shuffled_vertexes[2 * j];
+            int p2 = shuffled_vertexes[2 * j + 1];
             size_t dist = analyzer.landmarks_basic(p1, p2);
-
             results[i].push_back(dist);
-
-            int real_dist = analyzer.landmarks_get_shortest_path(p1, p2).size() - 2;
-            real_results[i].push_back(real_dist);
         }
         cout << "Method " << methods_names[i] << " calculated!" << endl;
     }
@@ -276,18 +280,20 @@ void landmarks_basic_research() {
     for (int i = 0; i < methods.size(); i++) {
         cout << "Method " << methods_names[i] << " has " << minimals[i] << "/" << amount_vertexes << " of minimum distances" << endl;
     }
+    cout << endl;
     for (int i = 0; i < methods.size(); i++) {
         size_t size = 0;
         size_t real_size = 0;
         for (int j = 0; j < amount_vertexes; j++) {
-            if (real_results[i][j] == UINT_MAX) continue;
+            if (results[i][j] == UINT_MAX) continue;
             size += results[i][j];
-            real_size += real_results[i][j];
+            real_size += real_results[j];
         }
-        cout << "Method " << methods_names[i] << " has approximation error: " << static_cast<double>(real_size) / static_cast<double>(size) << endl;
+        cout << "Method " << methods_names[i] << " has approximation error: " << static_cast<double>(size - real_size) / static_cast<double>(size) << endl;
     }
 }
 int main() {
+
     // Tests work only in DEBUG build
     analyzer_tests::tests();
     graph_tests::tests();
