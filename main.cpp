@@ -214,91 +214,109 @@ dataset dataset_choose() {
     throw runtime_error("dataset_choose: Undefined error!");
 }
 
-void landmarks_basic_research() {
+void landmarks_research() {
     const auto path = get_dataset_path(dataset_choose());
     graph g = uni_parser::parse(path);
     graph_analyzer analyzer(g);
 
-    vector<function<void(int)>> methods;
-    vector<string> methods_names;
+    vector<function<void(int)>> precompute_methods;
+    vector<string> precompute_methods_names;
 
-    methods.emplace_back([&](int x){ analyzer.landmarks_basic_precompute_random(x); });
-    methods.emplace_back([&](int x){ analyzer.landmarks_basic_precompute_highest_degrees(x); });
-    methods.emplace_back([&](int x){ analyzer.landmarks_basic_precompute_best_coverage(x); });
-    methods_names.emplace_back("choosing (random)");
-    methods_names.emplace_back("choosing (highest degrees)");
-    methods_names.emplace_back("choosing (best coverage)");
+    vector<function<void(void)>> precompute_wrappers;
+    vector<function<size_t(int, int)>> landmarks_type;
 
-    auto results = vector(methods.size(), vector<size_t>());
+    precompute_methods.emplace_back([&](int k){ analyzer.landmarks_precompute_random(k); });
+    precompute_methods.emplace_back([&](int k){ analyzer.landmarks_precompute_highest_degrees(k); });
+    precompute_methods.emplace_back([&](int k){ analyzer.landmarks_precompute_best_coverage(k); });
+    precompute_methods_names.emplace_back("choosing (random)");
+    precompute_methods_names.emplace_back("choosing (highest degrees)");
+    precompute_methods_names.emplace_back("choosing (best coverage)");
+
+    precompute_wrappers.emplace_back([&](){ analyzer.landmarks_basic_precompute(); });
+    precompute_wrappers.emplace_back([&](){ analyzer.landmarks_bfs_precompute(); });
+    landmarks_type.emplace_back([&](int s, int t) { return analyzer.landmarks_basic(s, t); });
+    landmarks_type.emplace_back([&](int s, int t) { return analyzer.landmarks_bfs(s, t); });
+
+    // const int amount_vertexes = min(500, static_cast<int>(g.amount_vertexes()));
+
+    int amount_vertexes, k;
+    cout << "Enter amount of vertexes: ";
+    cin >> amount_vertexes;
+
+    size_t measurings = precompute_methods.size(); // =3
     auto real_results = vector<size_t>();
-    vector shuffled_vertexes(g.vertexes.begin(), g.vertexes.end());
-    other::shuffle_vector(shuffled_vertexes);
+    vector random_vertexes(g.vertexes.begin(), g.vertexes.end());
+    other::shuffle_vector(random_vertexes);
 
-    const int amount_vertexes = min(500, static_cast<int>(g.amount_vertexes()));
-    int k;
-    cout << "Enter amount of landmarks: ";
-    cin >> k;
-
+    // Calculating real distances
+    cout << "Calculating real distances started!" << endl;
     for (int j = 0; j < amount_vertexes; j++) {
-        int p1 = shuffled_vertexes[2 * j];
-        int p2 = shuffled_vertexes[2 * j + 1];
-        size_t real_dist = analyzer.landmarks_get_shortest_path(p1, p2).size() - 2;
+        int p1 = random_vertexes[2 * j];
+        int p2 = random_vertexes[2 * j + 1];
+        size_t real_dist = analyzer.landmarks_get_shortest_path(p1, p2).size() - 1;  // -1 because we measure length of path, not vertexes in path
         real_results.push_back(real_dist);
     }
-    cout << "Real distances precalculated!" << endl;
-    for (int i = 0; i < methods.size(); i++) {
-        methods[i](k);
-        for (int j = 0; j < amount_vertexes; j++) {
-            int p1 = shuffled_vertexes[2 * j];
-            int p2 = shuffled_vertexes[2 * j + 1];
-            size_t dist = analyzer.landmarks_basic(p1, p2);
-            results[i].push_back(dist);
-        }
-        cout << "Method " << methods_names[i] << " calculated!" << endl;
-    }
+    cout << "Calculating real distances ended!" << endl << endl;
+    cout << "Enter amount of landmarks: ";
+    cin >> k;
     cout << endl;
-    for (int i = 0; i < methods.size(); i++) {
-        int count = 0;
+
+    // 0 is Landmarks-basic, 1 is Landmarks-BFS
+    for (int l = 0; l <= 1; l++) {
+        auto& landmarks = landmarks_type[l]; // function of measuring
+        auto results = vector(measurings, vector<size_t>());
+
+        cout << ">> Algorithm " << (l == 0 ? "Landmarks-Basic" : "Landmarks-BFS") << endl;
+
+        for (int i = 0; i < measurings; i++) {
+            precompute_methods[i](k); // it may be random, max-degrees or best coverage
+            precompute_wrappers[l](); // it may be landmarks-basic's or landmarks-BFS's precompute
+
+            for (int j = 0; j < amount_vertexes; j++) {
+                int p1 = random_vertexes[2 * j];
+                int p2 = random_vertexes[2 * j + 1];
+                size_t dist = landmarks(p1, p2);
+                results[i].push_back(dist);
+            }
+            cout << "Method " << precompute_methods_names[i]  << " calculated!" << endl;
+        }
+        cout << endl;
+        auto minimals = vector(measurings, 0);
         for (int j = 0; j < amount_vertexes; j++) {
-            if (results[i][j] != UINT_MAX) ++count;
+            size_t mn_dist = UINT_MAX;
+            for (int i = 0; i < measurings; i++) {
+                mn_dist = min(mn_dist, results[i][j]);
+            }
+            for (int i = 0; i < measurings; i++) {
+                if (mn_dist != UINT_MAX && mn_dist == results[i][j]) ++minimals[i];
+            }
         }
-        cout << "Method " << methods_names[i]  << " calculated " << count << "/" << amount_vertexes << " distances" << endl;
-    }
-    cout << endl;
-    auto minimals = vector(methods.size(), 0);
-    for (int j = 0; j < amount_vertexes; j++) {
-        size_t mn_dist = UINT_MAX;
-        for (int i = 0; i < methods.size(); i++) {
-            mn_dist = min(mn_dist, results[i][j]);
+        for (int i = 0; i < measurings; i++) {
+            cout << "Method " << precompute_methods_names[i] << " has " << minimals[i] << "/" << amount_vertexes << " of minimum distances" << endl;
         }
-        for (int i = 0; i < methods.size(); i++) {
-            if (mn_dist != UINT_MAX && mn_dist == results[i][j]) ++minimals[i];
+        cout << endl;
+        for (int i = 0; i < measurings; i++) {
+            size_t measured_size = 0;
+            size_t real_size = 0;
+            for (int j = 0; j < amount_vertexes; j++) {
+                if (results[i][j] == UINT_MAX) continue;
+                measured_size += results[i][j];
+                real_size += real_results[j];
+            }
+            cout << "Method " << precompute_methods_names[i] << " has approximation error: " << static_cast<double>(measured_size - real_size) / static_cast<double>(measured_size) << endl;
         }
+        cout << endl;
     }
-    for (int i = 0; i < methods.size(); i++) {
-        cout << "Method " << methods_names[i] << " has " << minimals[i] << "/" << amount_vertexes << " of minimum distances" << endl;
-    }
-    cout << endl;
-    for (int i = 0; i < methods.size(); i++) {
-        size_t size = 0;
-        size_t real_size = 0;
-        for (int j = 0; j < amount_vertexes; j++) {
-            if (results[i][j] == UINT_MAX) continue;
-            size += results[i][j];
-            real_size += real_results[j];
-        }
-        cout << "Method " << methods_names[i] << " has approximation error: " << static_cast<double>(size - real_size) / static_cast<double>(size) << endl;
-    }
+
+
 }
 int main() {
-
     // Tests work only in DEBUG build
     analyzer_tests::tests();
     graph_tests::tests();
+    // parse_examples();
 
-    parse_examples();
-
-    // landmarks_basic_research();
+    landmarks_research();
 
     return 0;
 }

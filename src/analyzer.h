@@ -61,10 +61,15 @@ public:
 
     double get_average_clustering_coefficient_max_CC();
 
-    void landmarks_basic_precompute_random(int k);
-    void landmarks_basic_precompute_highest_degrees(int k);
-    void landmarks_basic_precompute_best_coverage(int k);
+    void landmarks_precompute_random(int k);
+    void landmarks_precompute_highest_degrees(int k);
+    void landmarks_precompute_best_coverage(int k);
+    void landmarks_basic_precompute();
+    void landmarks_bfs_precompute();
+
     size_t landmarks_basic(int s, int t);
+
+    size_t landmarks_bfs(int s, int t);
     vector<int> landmarks_get_shortest_path(int s, int t) const;
 
 private:
@@ -112,10 +117,15 @@ private:
 
     // Landmarks-basic
     map<pair<int, int>, size_t> precomputed_vertexes;
-    void landmarks_basic_precompute(int k);
+
     vector<int> landmarks;
     void landmarks_basic_bfs(int s);
     // unordered_map<int, int> landmarks_visited;
+
+    // Landmarks-BFS
+    map<pair<int, int>, int> shortest_path_tree; // < to_vertex, pair<from_vertex, distance> >
+    void landmarks_bfs_bfs(int landmark);
+    vector<int> landmarks_bfs_get_shortest_precomputed_path(int landmark, int t);
 };
 
 #endif // ANALYZERS_H
