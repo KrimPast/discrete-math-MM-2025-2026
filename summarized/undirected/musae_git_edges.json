@@ -1,0 +1,74 @@
+{
+    "Basic Information": {
+        "Name": "musae_git_edges.csv",
+        "Type": "Undirected",
+        "Amount of vertexes": 37700,
+        "Amount of edges": 289003,
+        "Density": 0.0004066878203117068
+    },
+    "Additional Information": {
+        "Minimum degree": 1,
+        "Maximum degree": 9458,
+        "Average degree": 15.331724137931035,
+        "Amount of triangles": 4714290,
+        "Amount of closed triplets": 1571430,
+        "Amount of opened triplets": 251191684,
+        "Global Clustering coefficient": 0.006217006805826898,
+        "Average Clustering coefficient": 0.16753704480107193,
+        "Average Clustering coefficient in max CC": 0.16753704480107237,
+        "Double sweep diameter": 11,
+        "Sample diameter": 7,
+        "Snowball diameter": 4,
+        "Sample 90 procentile": 5,
+        "Snowball 90 procentile": 3,
+        "Probability that random vertex has degree <= than some degree": {
+            "1": 0.13381962864721486,
+            "2": 0.2563660477453581,
+            "4": 0.4289655172413793,
+            "8": 0.6292838196286472,
+            "16": 0.8004774535809019,
+            "32": 0.9113262599469497,
+            "64": 0.9655172413793105,
+            "128": 0.9885411140583553,
+            "256": 0.9957559681697596,
+            "512": 0.9984615384615352,
+            "1024": 0.9994694960212163,
+            "2048": 0.9998408488063619,
+            "4096": 0.9999469496021178,
+            "8192": 0.9999734748010568,
+            "16384": 0.9999999999999958
+        },
+        "Sizes of max CC after delete x% random vertexes": {
+            "0%": 37700,
+            "10%": 33887,
+            "20%": 30092,
+            "30%": 26287,
+            "40%": 22486,
+            "50%": 18668,
+            "60%": 14857,
+            "70%": 11079,
+            "80%": 7349,
+            "90%": 3623,
+            "100%": 0
+        },
+        "Sizes of max CC after delete x% max degreed vertexes": {
+            "0%": 37700,
+            "0.5%": 34821,
+            "1.0%": 33935,
+            "2.0%": 32573,
+            "3.0%": 31446,
+            "4.0%": 30443,
+            "5.0%": 29483,
+            "7.5%": 27141,
+            "10.0%": 24894,
+            "15.0%": 20164,
+            "25.0%": 7931,
+            "35.0%": 83,
+            "50.0%": 13
+        }
+    },
+    "Connected Components": {
+        "Amount of CCs": 1,
+        "Fraction of vertexes in max CC": 1.0
+    }
+}

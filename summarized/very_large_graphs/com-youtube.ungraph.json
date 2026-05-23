@@ -1,0 +1,75 @@
+{
+    "Basic Information": {
+        "Name": "com-youtube.ungraph.txt",
+        "Type": "Undirected",
+        "Amount of vertexes": 1134890,
+        "Amount of edges": 2987624,
+        "Density": 4.639260713241579e-06
+    },
+    "Additional Information": {
+        "Minimum degree": 1,
+        "Maximum degree": 28754,
+        "Average degree": 5.265045951590022,
+        "Amount of triangles": 27507474,
+        "Amount of closed triplets": 9169158,
+        "Amount of opened triplets": 2930626804,
+        "Global Clustering coefficient": 0.003118977683662796,
+        "Average Clustering coefficient": 0.08080227776186863,
+        "Average Clustering coefficient in max CC": 0.08080227776188081,
+        "Double sweep diameter": 24,
+        "Sample diameter": 12,
+        "Snowball diameter": 10,
+        "Sample 90 procentile": 7,
+        "Snowball 90 procentile": 6,
+        "Probability that random vertex has degree <= than some degree": {
+            "1": 0.5309228207139017,
+            "2": 0.6914996167029404,
+            "4": 0.822557252244711,
+            "8": 0.9085514895716766,
+            "16": 0.956279463207888,
+            "32": 0.9798623655156006,
+            "64": 0.9911559710632747,
+            "128": 0.9962842213782837,
+            "256": 0.9985249671774366,
+            "512": 0.9994695521151853,
+            "1024": 0.9998096731841937,
+            "2048": 0.9999312708720783,
+            "4096": 0.9999859017173599,
+            "8192": 0.9999947131440182,
+            "16384": 0.9999991188573474,
+            "32768": 1.000000000000013
+        },
+        "Sizes of max CC after delete x% random vertexes": {
+            "0%": 1134890,
+            "10%": 1007706,
+            "20%": 881755,
+            "30%": 758902,
+            "40%": 636445,
+            "50%": 518225,
+            "60%": 403544,
+            "70%": 292243,
+            "80%": 186192,
+            "90%": 85456,
+            "100%": 0
+        },
+        "Sizes of max CC after delete x% max degreed vertexes": {
+            "0%": 1134890,
+            "0.5%": 791535,
+            "1.0%": 712347,
+            "2.0%": 601469,
+            "3.0%": 510593,
+            "4.0%": 424808,
+            "5.0%": 334690,
+            "7.5%": 95781,
+            "10.0%": 526,
+            "15.0%": 66,
+            "25.0%": 15,
+            "35.0%": 6,
+            "50.0%": 4
+        }
+    },
+    "Connected Components": {
+        "Amount of CCs": 1,
+        "Fraction of vertexes in max CC": 1.0
+    }
+}

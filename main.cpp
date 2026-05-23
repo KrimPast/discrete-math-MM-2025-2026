@@ -97,19 +97,19 @@ void parse_example(dataset dgraph) {
 
     output_file = get_summarized_path(dgraph);
     const auto start = std::chrono::steady_clock::now();
+    auto real_graph_type = uni_parser::get_graph_type(output_file);
 
     measure(graph_name, "graph name",                                              [&]{ return filesystem::path(get_dataset_path(dgraph)).filename(); });
-    measure(undefined_field, "parsing",                                            [&] { g = uni_parser::parse(get_dataset_path(dgraph)); return "----- start tests -----";});
+    measure(undefined_field, "parsing",                                            [&] { g = uni_parser::parse(get_dataset_path(dgraph), Undirected); return "----- start tests -----";});
 
     // Base graph data
-    measure(graph_type, "graph type",                                                   [&]{ return g.type == Directed ? "Directed" : "Undirected"; });
+    measure(graph_type, "graph type",                                                   [&]{ return real_graph_type == Directed ? "Directed" : "Undirected"; });
     measure(amount_of_vertexes, "amount vertexes",                                 [&] { return g.amount_vertexes(); });
     measure(amount_of_edges, "amount edges",                                       [&] { return g.amount_edges; });
-    if (g.type == Undirected) {
-        measure(min_degree, "min degree",                                          [&] { return analyzer.get_min_degree(); });
-        measure(max_degree, "max degree",                                          [&] { return analyzer.get_max_degree(); });
-        measure(average_degree, "average degree",                                  [&]{ return analyzer.get_average_degree(); });
-    }
+
+    measure(min_degree, "min degree",                                          [&] { return analyzer.get_min_degree(); });
+    measure(max_degree, "max degree",                                          [&] { return analyzer.get_max_degree(); });
+    measure(average_degree, "average degree",                                  [&]{ return analyzer.get_average_degree(); });
 
     measure(density, "density",                                                    [&]{ return analyzer.get_density(); });
 
@@ -124,35 +124,33 @@ void parse_example(dataset dgraph) {
 
     measure(average_clustering_coefficient, "average cluster coef",                [&]{ return analyzer.get_average_clustering_coefficient(); });
     measure(average_clustering_coefficient_in_max_CC, "avr cluster coef in max CC",[&]{ return analyzer.get_average_clustering_coefficient_max_CC(); });
-    if (g.type == Undirected) {
-        measure(double_sweep_diameter, "double sweep diameter",                        [&] { return analyzer.estimate_diameter_of_max_CC_from_double_sweep(); });
-        measure(sample_diameter, "sample diameter",                                    [&] { return analyzer.estimate_diameter_of_max_CC_from_sample(); });
-        measure(snowball_diameter, "snowball diameter",                                [&] { return analyzer.estimate_diameter_of_max_CC_from_snowball(); });
-        measure(sample_90_percentile, "sample 90 percentile",                          [&] { return analyzer.estimate_90th_percentile_of_max_CC_from_sample(); });
-        measure(snowball_90_percentile, "snowball 90 percentile",                      [&] { return analyzer.estimate_90th_percentile_of_max_CC_from_snowball(); });
 
-    }
+    measure(double_sweep_diameter, "double sweep diameter",                        [&] { return analyzer.estimate_diameter_of_max_CC_from_double_sweep(); });
+    measure(sample_diameter, "sample diameter",                                    [&] { return analyzer.estimate_diameter_of_max_CC_from_sample(); });
+    measure(snowball_diameter, "snowball diameter",                                [&] { return analyzer.estimate_diameter_of_max_CC_from_snowball(); });
+    measure(sample_90_percentile, "sample 90 percentile",                          [&] { return analyzer.estimate_90th_percentile_of_max_CC_from_sample(); });
+    measure(snowball_90_percentile, "snowball 90 percentile",                      [&] { return analyzer.estimate_90th_percentile_of_max_CC_from_snowball(); });
+
 
     // SCC
-    if (g.type == Directed) {
-        measure(amount_of_SCCs, "amount of SCC",                                   [&] { return analyzer.get_amount_of_SCC(); });
-        measure(fraction_of_vertexes_in_max_SCC, "fraction of ver in max SCC",     [&]{ return analyzer.get_fraction_of_vertexes_in_max_SCC(); });
+    if (real_graph_type == Directed) {
+        graph og = uni_parser::parse(get_dataset_path(dgraph), Directed);
+        graph_analyzer oanalyzer(og);
+        measure(amount_of_SCCs, "amount of SCC",                                   [&] { return oanalyzer.get_amount_of_SCC(); });
+        measure(fraction_of_vertexes_in_max_SCC, "fraction of ver in max SCC",     [&]{ return oanalyzer.get_fraction_of_vertexes_in_max_SCC(); });
+        og.clear();
     }
 
     // Warning! These functions break the graph
-    if (g.type == Undirected) {
-        measure(probability_that_random_vertex_has_degree_less_than_some_degree, "probab. that v. has degree less",
-                [&] { return analyzer.get_probabilities_that_random_vertex_has_less_than_some_degree(); });
-    }
+    measure(probability_that_random_vertex_has_degree_less_than_some_degree, "probab. that v. has degree less",
+            [&] { return analyzer.get_probabilities_that_random_vertex_has_less_than_some_degree(); });
 
     graph g_copy = g;
     measure(sizes_of_max_CC_after_delete_x_percent_random_vertexes, "delete 0% - 100% random vertexes",
             [&] { return analyzer.get_sizes_of_max_CC_after_delete_x_percentage_vertexes(); });
 
-    if (g.type == Undirected) {
-        measure(sizes_of_max_CC_after_delete_x_percent_max_degreed_vertexes, "delete 0% - 100% max degreed vertexes",
-                [&] { return graph_analyzer(g_copy).get_sizes_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(); });
-    }
+    measure(sizes_of_max_CC_after_delete_x_percent_max_degreed_vertexes, "delete 0% - 100% max degreed vertexes",
+            [&] { return graph_analyzer(g_copy).get_sizes_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees(); });
 
     const auto end = std::chrono::steady_clock::now();
     const auto ms = chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
@@ -298,9 +296,9 @@ int main() {
     analyzer_tests::tests();
     graph_tests::tests();
 
-    // parse_examples();
+    parse_examples();
 
-    landmarks_basic_research();
+    // landmarks_basic_research();
 
     return 0;
 }

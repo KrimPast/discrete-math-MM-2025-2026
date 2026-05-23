@@ -63,6 +63,7 @@ private:
 class uni_parser {
 public:
     uni_parser() = delete;
-    static graph parse(const string &file_path);
+    static g_type get_graph_type(const string &file_path);
+    static graph parse(const string &file_path, g_type preset_type = Undefined);
 };
 #endif // PARSER_H
