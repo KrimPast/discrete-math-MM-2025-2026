@@ -1,0 +1,67 @@
+{
+    "Basic Information": {
+        "Name": "CA-GrQc.txt",
+        "Type": "Undirected",
+        "Amount of vertexes": 5242,
+        "Amount of edges": 14496,
+        "Density": 0.001055278280507905
+    },
+    "Additional Information": {
+        "Minimum degree": 1,
+        "Maximum degree": 81,
+        "Average degree": 5.530713468141931,
+        "Amount of triangles": 434571,
+        "Amount of closed triplets": 144857,
+        "Amount of opened triplets": 170174,
+        "Global Clustering coefficient": 0.4598182401097035,
+        "Average Clustering coefficient": 0.5304030148368235,
+        "Average Clustering coefficient in max CC": 0.55708384762065,
+        "Double sweep diameter": 17,
+        "Sample diameter": 17,
+        "Snowball diameter": 10,
+        "Sample 90 procentile": 8,
+        "Snowball 90 procentile": 7,
+        "Probability that random vertex has degree <= than some degree": {
+            "1": 0.22815719191148418,
+            "2": 0.44067149942769934,
+            "4": 0.6833269744372377,
+            "8": 0.840518885921404,
+            "16": 0.930370087752766,
+            "32": 0.9753910721098815,
+            "64": 0.9982830980541774,
+            "128": 0.9999999999999994
+        },
+        "Sizes of max CC after delete x% random vertexes": {
+            "0%": 4158,
+            "10%": 3676,
+            "20%": 3179,
+            "30%": 2726,
+            "40%": 2293,
+            "50%": 1815,
+            "60%": 1318,
+            "70%": 880,
+            "80%": 366,
+            "90%": 46,
+            "100%": 0
+        },
+        "Sizes of max CC after delete x% max degreed vertexes": {
+            "0%": 4158,
+            "0.5%": 4102,
+            "1.0%": 4059,
+            "2.0%": 3944,
+            "3.0%": 3806,
+            "4.0%": 3672,
+            "5.0%": 3574,
+            "7.5%": 3137,
+            "10.0%": 2640,
+            "15.0%": 355,
+            "25.0%": 19,
+            "35.0%": 10,
+            "50.0%": 6
+        }
+    },
+    "Connected Components": {
+        "Amount of CCs": 355,
+        "Fraction of vertexes in max CC": 0.7932086989698588
+    }
+}

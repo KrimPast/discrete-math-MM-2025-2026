@@ -1,0 +1,69 @@
+{
+    "Basic Information": {
+        "Name": "soc-wiki-Vote.mtx",
+        "Type": "Directed",
+        "Amount of vertexes": 889,
+        "Amount of edges": 2914,
+        "Density": 0.007382523130554626
+    },
+    "Additional Information": {
+        "Minimum degree": 1,
+        "Maximum degree": 102,
+        "Average degree": 6.555680539932508,
+        "Amount of triangles": 19071,
+        "Amount of closed triplets": 6357,
+        "Amount of opened triplets": 87122,
+        "Global Clustering coefficient": 0.06800457856844853,
+        "Average Clustering coefficient": 0.15284694735014304,
+        "Average Clustering coefficient in max CC": 0.15284694735014312,
+        "Double sweep diameter": 13,
+        "Sample diameter": 13,
+        "Snowball diameter": 13,
+        "Sample 90 procentile": 6,
+        "Snowball 90 procentile": 6,
+        "Probability that random vertex has degree <= than some degree": {
+            "1": 0.21484814398200225,
+            "2": 0.37570303712035996,
+            "4": 0.5658042744656918,
+            "8": 0.7637795275590552,
+            "16": 0.9167604049493815,
+            "32": 0.9820022497187855,
+            "64": 0.9966254218222723,
+            "128": 1.0
+        },
+        "Sizes of max CC after delete x% random vertexes": {
+            "0%": 889,
+            "10%": 797,
+            "20%": 703,
+            "30%": 615,
+            "40%": 522,
+            "50%": 434,
+            "60%": 339,
+            "70%": 246,
+            "80%": 163,
+            "90%": 77,
+            "100%": 2
+        },
+        "Sizes of max CC after delete x% max degreed vertexes": {
+            "0%": 889,
+            "0.5%": 874,
+            "1.0%": 865,
+            "2.0%": 850,
+            "3.0%": 832,
+            "4.0%": 814,
+            "5.0%": 792,
+            "7.5%": 725,
+            "10.0%": 669,
+            "15.0%": 554,
+            "25.0%": 175,
+            "35.0%": 26,
+            "50.0%": 6
+        }
+    },
+    "Connected Components": {
+        "Amount of CCs": 1,
+        "Fraction of vertexes in max CC": 1.0,
+        "Amount of SCCs": 889,
+        "Fraction of vertexes in max SCC": 0.0011248593925759281
+    }
+}

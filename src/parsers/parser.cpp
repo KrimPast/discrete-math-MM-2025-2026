@@ -99,24 +99,29 @@ edge mtx_parser::try_parse_metadata(string &line) const {
 }
 // (End) Section "Try parse metadata"
 
+g_type uni_parser::get_graph_type(const string &file_path) {
+    if (boost::contains(file_path, "undirected") || boost::contains(file_path, "very_large_graphs"))
+        return g_type::Undirected;
+    else if (boost::contains(file_path, "directed"))
+        return g_type::Directed;
+    else
+        throw runtime_error("get_graph_type: Cannot identify type of graph. You must install it manually!\n");
+}
+
 // Пройтись по файлу, считать, сколько у каждой вершины ребёр и проставить capacity
-graph uni_parser::parse(const string &file_path) {
+graph uni_parser::parse(const string &file_path, const g_type preset_type) {
     filesystem::path f = file_path;
     if (!filesystem::exists(file_path)) {
         throw runtime_error("File is not exist");
     }
-    string ext = f.extension();
+    const string ext = f.extension();
     graph g;
 
-    if (boost::contains(file_path, "undirected") || boost::contains(file_path, "very_large_graphs")) {
-        g.type = g_type::Undirected;
+    if (preset_type == Undefined) {
+        g.type = get_graph_type(file_path);
     }
-    else if (boost::contains(file_path, "directed")) {
-        g.type = g_type::Directed;
-    }
-    else {
-        throw runtime_error("Cannot identify type of graph. You must install it manually!\n");
-    }
+    else g.type = preset_type;
+
     auto a = mtx_parser(g);
     if (ext == ".mtx")
         mtx_parser(g).parse(file_path);

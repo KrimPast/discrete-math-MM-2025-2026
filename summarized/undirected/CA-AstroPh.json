@@ -1,0 +1,69 @@
+{
+    "Basic Information": {
+        "Name": "CA-AstroPh.txt",
+        "Type": "Undirected",
+        "Amount of vertexes": 18772,
+        "Amount of edges": 198110,
+        "Density": 0.0011244455715955115
+    },
+    "Additional Information": {
+        "Minimum degree": 1,
+        "Maximum degree": 504,
+        "Average degree": 21.10696782441935,
+        "Amount of triangles": 12173736,
+        "Amount of closed triplets": 4057912,
+        "Amount of opened triplets": 17390114,
+        "Global Clustering coefficient": 0.18919745807842642,
+        "Average Clustering coefficient": 0.630948414428111,
+        "Average Clustering coefficient in max CC": 0.6331956222885615,
+        "Double sweep diameter": 14,
+        "Sample diameter": 14,
+        "Snowball diameter": 7,
+        "Sample 90 procentile": 6,
+        "Snowball 90 procentile": 4,
+        "Probability that random vertex has degree <= than some degree": {
+            "1": 0.06823993181333901,
+            "2": 0.15981248668229275,
+            "4": 0.31222032814830597,
+            "8": 0.4756552311953973,
+            "16": 0.6361602386533134,
+            "32": 0.7965587044534415,
+            "64": 0.9254208395482635,
+            "128": 0.9855636053696998,
+            "256": 0.9985616876198586,
+            "512": 0.9999999999999984
+        },
+        "Sizes of max CC after delete x% random vertexes": {
+            "0%": 17903,
+            "10%": 16010,
+            "20%": 14154,
+            "30%": 12328,
+            "40%": 10496,
+            "50%": 8670,
+            "60%": 6829,
+            "70%": 5014,
+            "80%": 3240,
+            "90%": 1495,
+            "100%": 0
+        },
+        "Sizes of max CC after delete x% max degreed vertexes": {
+            "0%": 17903,
+            "0.5%": 17788,
+            "1.0%": 17671,
+            "2.0%": 17441,
+            "3.0%": 17197,
+            "4.0%": 16964,
+            "5.0%": 16729,
+            "7.5%": 16072,
+            "10.0%": 15328,
+            "15.0%": 13954,
+            "25.0%": 10479,
+            "35.0%": 5656,
+            "50.0%": 90
+        }
+    },
+    "Connected Components": {
+        "Amount of CCs": 290,
+        "Fraction of vertexes in max CC": 0.9537076496910292
+    }
+}
