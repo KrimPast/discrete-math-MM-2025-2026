@@ -39,6 +39,7 @@ namespace summarizer {
             case sample_90_percentile: return j[additional_information]["Sample 90 procentile"];
             case snowball_90_percentile: return j[additional_information]["Snowball 90 procentile"];
             case probability_that_random_vertex_has_degree_less_than_some_degree: return j[additional_information]["Probability that random vertex has degree <= than some degree"];
+            case probability_that_random_vertex_has_degree_less_than_some_degree_in_log2_scale: return j[additional_information]["Probability in log2 scale that random vertex has log2_degree >= than some log2_degree"];
             case sizes_of_max_CC_after_delete_x_percent_random_vertexes: return j[additional_information]["Sizes of max CC after delete x% random vertexes"];
             case sizes_of_max_CC_after_delete_x_percent_max_degreed_vertexes: return j[additional_information]["Sizes of max CC after delete x% max degreed vertexes"];
 

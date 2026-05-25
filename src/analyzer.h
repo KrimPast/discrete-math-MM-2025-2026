@@ -49,6 +49,8 @@ public:
 
     double get_probability_that_random_vertex_has_some_degree_log_log(size_t log2_degree);
 
+    json get_probabilities_that_random_vertex_has_less_than_some_degree_log_log();
+
     void remove_vertex(int v);
     json get_sizes_of_max_CC_after_delete_x_percentage_vertexes();
     json get_sizes_of_max_CC_after_delete_x_percentage_vertexes_of_max_degrees();
