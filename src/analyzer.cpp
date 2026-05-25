@@ -381,8 +381,20 @@ double graph_analyzer::get_probability_that_random_vertex_has_some_degree_log_lo
     }
     return log2(static_cast<double>(amount) / static_cast<double>(g.amount_vertexes()));
 }
+json graph_analyzer::get_probabilities_that_random_vertex_has_less_than_some_degree_log_log() {
+    if (degrees_vector.empty()) init_degree_counters_cache();
 
+    json probabilities;
+    if (degrees_vector.empty()) return probabilities;
+    ranges::sort(degrees_vector, other::degree_greater);
 
+    const int log2_max_degree = log2(get_max_degree());
+    for (int i = 1; i <= log2_max_degree + 1; i++) {
+        auto result = get_probability_that_random_vertex_has_some_degree_log_log(i);
+        probabilities[to_string(i)] = (result == -INFINITY ? "-inf" : to_string(result));
+    }
+    return probabilities;
+}
 void graph_analyzer::init_degree_counters_cache() {
     degrees_counter.clear();
     degrees_vector.clear();

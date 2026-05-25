@@ -145,6 +145,9 @@ void parse_example(dataset dgraph) {
     measure(probability_that_random_vertex_has_degree_less_than_some_degree, "probab. that v. has degree less",
             [&] { return analyzer.get_probabilities_that_random_vertex_has_less_than_some_degree(); });
 
+    measure(probability_that_random_vertex_has_degree_less_than_some_degree_in_log2_scale, "probab. that v. has log_degree <= smth",
+            [&] { return analyzer.get_probabilities_that_random_vertex_has_less_than_some_degree_log_log(); });
+
     graph g_copy = g;
     measure(sizes_of_max_CC_after_delete_x_percent_random_vertexes, "delete 0% - 100% random vertexes",
             [&] { return analyzer.get_sizes_of_max_CC_after_delete_x_percentage_vertexes(); });
@@ -314,9 +317,9 @@ int main() {
     // Tests work only in DEBUG build
     analyzer_tests::tests();
     graph_tests::tests();
-    // parse_examples();
+    parse_examples();
 
-    landmarks_research();
+    // landmarks_research();
 
     return 0;
 }

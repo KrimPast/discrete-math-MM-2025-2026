@@ -19,6 +19,7 @@ namespace summarizer {
         double_sweep_diameter, sample_diameter, snowball_diameter,
         sample_90_percentile, snowball_90_percentile,
         probability_that_random_vertex_has_degree_less_than_some_degree,
+        probability_that_random_vertex_has_degree_less_than_some_degree_in_log2_scale,
         sizes_of_max_CC_after_delete_x_percent_random_vertexes,
         sizes_of_max_CC_after_delete_x_percent_max_degreed_vertexes
     };
