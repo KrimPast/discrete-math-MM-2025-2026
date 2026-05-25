@@ -1,0 +1,86 @@
+{
+    "Basic Information": {
+        "Name": "Wiki-Vote.txt",
+        "Type": "Directed",
+        "Amount of vertexes": 7115,
+        "Amount of edges": 100762,
+        "Density": 0.003981420144693063
+    },
+    "Additional Information": {
+        "Minimum degree": 1,
+        "Maximum degree": 1065,
+        "Average degree": 28.32382290934645,
+        "Amount of triangles": 5475501,
+        "Amount of closed triplets": 1825167,
+        "Amount of opened triplets": 25440826,
+        "Global Clustering coefficient": 0.06693931887974885,
+        "Average Clustering coefficient": 0.1408978458930874,
+        "Average Clustering coefficient in max CC": 0.1418749184162634,
+        "Double sweep diameter": 7,
+        "Sample diameter": 6,
+        "Snowball diameter": 5,
+        "Sample 90 procentile": 5,
+        "Snowball 90 procentile": 3,
+        "Probability that random vertex has degree <= than some degree": {
+            "1": 0.3253689388615601,
+            "2": 0.4154602951510893,
+            "4": 0.5042867182009839,
+            "8": 0.5849613492621223,
+            "16": 0.6719606465214335,
+            "32": 0.7548840477863668,
+            "64": 0.8633872101194652,
+            "128": 0.9516514406184116,
+            "256": 0.9881939564300799,
+            "512": 0.9987350667603705,
+            "1024": 0.9998594518622683,
+            "2048": 1.0000000000000056
+        },
+        "Probability in log2 scale that random vertex has log2_degree >= than some log2_degree": {
+            "1": "-2.7910234922199666",
+            "2": "-3.3290424913308474",
+            "3": "-3.393636017838848",
+            "4": "-3.5181985831933633",
+            "5": "-3.2041910041457644",
+            "6": "-3.4590261394213373",
+            "7": "-4.763225039876395",
+            "8": "-6.548720527970259",
+            "9": "-9.796648041413844",
+            "10": "-12.796648041413844",
+            "11": "-inf"
+        },
+        "Sizes of max CC after delete x% random vertexes": {
+            "0%": 7066,
+            "10%": 6363,
+            "20%": 5647,
+            "30%": 4948,
+            "40%": 4240,
+            "50%": 3528,
+            "60%": 2821,
+            "70%": 2112,
+            "80%": 1408,
+            "90%": 702,
+            "100%": 0
+        },
+        "Sizes of max CC after delete x% max degreed vertexes": {
+            "0%": 7066,
+            "0.5%": 6890,
+            "1.0%": 6749,
+            "2.0%": 6558,
+            "3.0%": 6305,
+            "4.0%": 6043,
+            "5.0%": 5847,
+            "7.5%": 5295,
+            "10.0%": 4754,
+            "15.0%": 3706,
+            "25.0%": 1283,
+            "35.0%": 12,
+            "50.0%": 5
+        }
+    },
+    "Connected Components": {
+        "Amount of CCs": 24,
+        "Fraction of vertexes in max CC": 0.9931131412508785,
+        "Amount of SCCs": 5816,
+        "Fraction of vertexes in max SCC": 0.18271257905832747
+    }
+}
