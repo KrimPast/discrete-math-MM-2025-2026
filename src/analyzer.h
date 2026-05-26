@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include <vector>
 #include <set>
-#include <queue>
 
 #include "general.h"
 #include "summarizer/summarizer.h"
@@ -93,15 +92,6 @@ private:
     unordered_map<int, int> get_distances_from(int v);
 
     // Landmark-based fast distance estimation
-    static constexpr int DEFAULT_NUM_LANDMARKS = 30;
-    int num_landmarks = DEFAULT_NUM_LANDMARKS;
-    bool landmarks_built = false;
-    vector<int> landmark_ids;
-    unordered_map<int, vector<int>> landmark_dist;
-
-    void ensure_landmarks_built();
-    void build_landmarks();
-    int estimate_distance(int s, int t) const;
 
     // Global clustering
     size_t get_amount_of_closed_triplets(const unordered_set<int>& neighbourhood) const;
@@ -116,6 +106,10 @@ private:
 
     // Snowball
     set<int> build_snowball_sample(int target_size);
+
+    unordered_map<int, int> get_distances_in_subset(int v, const set<int>& allowed);
+    vector<int> pairwise_distances_in_component(const vector<int>& sample);
+    vector<int> pairwise_distances_in_subset(const set<int>& subset);
 
     // Landmarks-basic
     map<pair<int, int>, size_t> precomputed_vertexes;

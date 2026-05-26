@@ -1,4 +1,3 @@
-#include <omp.h>
 #include <atomic>
 #include <queue>
 
@@ -300,8 +299,6 @@ unordered_map<int, int> graph_analyzer::get_distances_from(const int v) {
     return dist;
 }
 
-
-
 size_t graph_analyzer::get_degree(const int v) const {
     if (g.type == Undirected) {
         if (!g.contains(v)) throw runtime_error("get_degree: No such vertex in graph");
@@ -355,7 +352,7 @@ json graph_analyzer::get_probabilities_that_random_vertex_has_less_than_some_deg
     json probabilities;
     if (degrees_vector.empty()) return probabilities;
 
-    const int max_degree = get_max_degree();
+    const long max_degree = static_cast<long>(get_max_degree());
     vector<size_t> degrees_per_step = {1};
     size_t i = 1;
     while (i <= max_degree) {
@@ -388,10 +385,10 @@ json graph_analyzer::get_probabilities_that_random_vertex_has_less_than_some_deg
     if (degrees_vector.empty()) return probabilities;
     ranges::sort(degrees_vector, other::degree_greater);
 
-    const int log2_max_degree = log2(get_max_degree());
+    const int log2_max_degree = static_cast<int>(log2(get_max_degree()));
     for (int i = 1; i <= log2_max_degree + 1; i++) {
-        auto result = get_probability_that_random_vertex_has_some_degree_log_log(i);
-        probabilities[to_string(i)] = (result == -INFINITY ? "-inf" : to_string(result));
+        const auto result = get_probability_that_random_vertex_has_some_degree_log_log(i);
+        probabilities[to_string(i)] = (result == static_cast<double>(-INFINITY) ? "-inf" : to_string(result));
     }
     return probabilities;
 }
@@ -421,21 +418,21 @@ set<int> graph_analyzer::get_max_CC() {
 json graph_analyzer::get_sizes_of_max_CC_after_delete_x_percentage_vertexes() {
     json sizes = {{"0%", get_max_CC().size()}};
     constexpr int steps = 10;
-    const long to_delete = g.amount_vertexes() / 10;
+    const size_t to_delete = g.amount_vertexes() / 10;
     vector deletable_list(g.vertexes.begin(), g.vertexes.end());
 
     other::shuffle_vector(deletable_list);
     int ind = 0;
     for (int i = 1; i <= steps; ++i) {
-        long deleted_on_step = (g.amount_vertexes() < to_delete) ? g.amount_vertexes() : to_delete;
+        long deleted_on_step = (g.amount_vertexes() < to_delete) ? static_cast<long>(g.amount_vertexes()) : static_cast<long>(to_delete);
         while (deleted_on_step > 0) {
-            int el = deletable_list[ind++];
+            const int el = deletable_list[ind++];
 
-            long amount_before = g.amount_vertexes();
+            const size_t amount_before = g.amount_vertexes();
             remove_vertex(el); // This thing also can delete of neighbors of "el" in special case
-            long amount_after = g.amount_vertexes();
+            const size_t amount_after = g.amount_vertexes();
 
-            deleted_on_step -= (amount_before - amount_after);
+            deleted_on_step -= static_cast<long>(amount_before - amount_after);
         }
         sizes[to_string(i * steps) + "%"] = get_max_CC().size();
     }
@@ -446,7 +443,7 @@ json graph_analyzer::get_sizes_of_max_CC_after_delete_x_percentage_vertexes_of_m
     json sizes = {{"0%", get_max_CC().size()}};
     size_t initial_size = g.amount_vertexes();
     vector<double> percentage_to_delete_on_each_step = {0.005, 0.005, 0.01, 0.01, 0.01, 0.01, 0.025, 0.025, 0.05, 0.1, 0.1, 0.15};
-    vector<double> percentage_to_delete_sum = vector(percentage_to_delete_on_each_step.size(), -1.0);
+    auto percentage_to_delete_sum = vector(percentage_to_delete_on_each_step.size(), -1.0);
     percentage_to_delete_sum[0] = percentage_to_delete_on_each_step[0];
     for (int i = 1; i < percentage_to_delete_on_each_step.size(); ++i) {
         percentage_to_delete_sum[i] = percentage_to_delete_sum[i - 1] + percentage_to_delete_on_each_step[i];
@@ -456,13 +453,13 @@ json graph_analyzer::get_sizes_of_max_CC_after_delete_x_percentage_vertexes_of_m
     ranges::sort(degrees_vector, other::degree_greater);
     int ind = 0;
     for (int i = 0; i < percentage_to_delete_on_each_step.size(); ++i) {
-        long to_delete_on_step = min(static_cast<size_t>(initial_size * percentage_to_delete_on_each_step[i]), g.amount_vertexes()); // if deleted_on_step = average_delete_step
+        const size_t to_delete_on_step = min(static_cast<size_t>(static_cast<double>(initial_size) * percentage_to_delete_on_each_step[i]), g.amount_vertexes()); // if deleted_on_step = average_delete_step
         long deleted = 0;
         while (deleted < to_delete_on_step) {
             remove_vertex(degrees_vector[ind++].second);
             ++deleted;
         }
-        string string_percent = std::format("{:.1f}", percentage_to_delete_sum[i] * 100) + '%';
+        const string string_percent = std::format("{:.1f}", percentage_to_delete_sum[i] * 100) + '%';
         sizes[string_percent] = get_max_CC().size();
     }
     return sizes;
@@ -602,7 +599,7 @@ void graph_analyzer::landmarks_bfs_bfs(int landmark) {
 }
 
 vector<int> graph_analyzer::landmarks_bfs_get_shortest_precomputed_path(int landmark, int t) {
-    if (!shortest_path_tree.contains(pair(landmark, t))) return vector<int>();
+    if (!shortest_path_tree.contains(pair(landmark, t))) return {};
     vector result{t};
     while (t != landmark) {
         t = shortest_path_tree[pair(landmark, t)];
@@ -625,7 +622,7 @@ size_t graph_analyzer::landmarks_basic(int s, int t) {
     }
     return d_approx;
 }
-size_t graph_analyzer::landmarks_bfs(int s, int t) {
+size_t graph_analyzer::landmarks_bfs(const int s, int t) {
     if (g.type != Undirected) throw runtime_error("landmarks_bfs: You can use this only on undirected graph!");
     if (shortest_path_tree.empty() && g.amount_vertexes() > 0) throw runtime_error("landmarks_bfs: You should use landmarks_basic_precompute() before landmarks_basic()");
 
@@ -643,11 +640,10 @@ size_t graph_analyzer::landmarks_bfs(int s, int t) {
             }
         }
     }
-    graph_analyzer reduced_g_analyzer(reduced_g);
-    auto shortest_path = reduced_g_analyzer.landmarks_get_shortest_path(s, t);
-    return shortest_path.size() == 0 ? UINT_MAX : shortest_path.size() - 1; // -1 because we measure length of path, not vertexes in path
+    const graph_analyzer reduced_g_analyzer(reduced_g);
+    const auto shortest_path = reduced_g_analyzer.landmarks_get_shortest_path(s, t);
+    return shortest_path.empty() ? UINT_MAX : shortest_path.size() - 1; // -1 because we measure length of path, not vertexes in path
 }
-
 
 size_t graph_analyzer::estimate_diameter_of_max_CC_from_double_sweep() {
     const auto max_CC = get_max_CC();
@@ -661,107 +657,25 @@ size_t graph_analyzer::estimate_diameter_of_max_CC_from_double_sweep() {
     return static_cast<size_t>(d2);
 }
 
-void graph_analyzer::ensure_landmarks_built() {
-    if (!landmarks_built) {
-        build_landmarks();
-        landmarks_built = true;
-    }
-}
-
-void graph_analyzer::build_landmarks() {
-    landmark_ids.clear();
-    landmark_dist.clear();
-
-    const auto max_cc = get_max_CC();
-    if (max_cc.empty()) return;
-
-    vector<pair<size_t, int>> deg_vertex;
-    for (int v : max_cc) {
-        deg_vertex.emplace_back(get_degree(v), v);
-    }
-    ranges::sort(deg_vertex, greater());
-
-    landmark_ids.reserve(num_landmarks);
-    for (auto &v: deg_vertex | views::values) {
-        if (landmark_ids.size() >= num_landmarks) break;
-        bool too_close = false;
-        for (int chosen : landmark_ids) {
-            if (g[v].contains(chosen) || g[chosen].contains(v)) {
-                too_close = true;
-                break;
-            }
-        }
-        if (!too_close)
-            landmark_ids.push_back(v);
-    }
-
-    if (landmark_ids.size() < num_landmarks) {
-        for (auto &v: deg_vertex | views::values) {
-            if (ranges::find(landmark_ids, v) == landmark_ids.end()) {
-                landmark_ids.push_back(v);
-                if (landmark_ids.size() >= num_landmarks) break;
-            }
-        }
-    }
-
-    for (int v : g.vertexes) {
-        landmark_dist[v].assign(num_landmarks, -1);
-    }
-
-    for (int i = 0; i < landmark_ids.size(); ++i) {
-        const int landmark = landmark_ids[i];
-        for (auto dists = get_distances_from(landmark); auto &[v, d] : dists) {
-            if (landmark_dist.contains(v)) {
-                landmark_dist[v][i] = d;
-            }
-        }
-    }
-}
-
-int graph_analyzer::estimate_distance(const int s, const int t) const {
-    int best = INT_MAX;
-    for (int i = 0; i < landmark_ids.size(); ++i) {
-        const int ds = landmark_dist.at(s)[i];
-        if (const int dt = landmark_dist.at(t)[i]; ds != -1 && dt != -1) {
-            if (const int via = ds + dt; via < best) best = via;
-        }
-    }
-    return (best == INT_MAX) ? -1 : best;
-}
-
 size_t graph_analyzer::estimate_diameter_of_max_CC_from_sample(const int sample_size) {
-    ensure_landmarks_built();
     const auto max_cc = get_max_CC();
     if (max_cc.empty()) return 0;
 
     const int k = min(sample_size, static_cast<int>(max_cc.size()));
     const auto sample = other::get_random_n_elements(max_cc, k);
-
-    size_t diameter = 0;
-    for (size_t i = 0; i < sample.size(); ++i) {
-        for (size_t j = i + 1; j < sample.size(); ++j) {
-            if (const int est = estimate_distance(sample[i], sample[j]); est > static_cast<int>(diameter)) diameter = est;
-        }
-    }
-    return diameter;
+    auto dists = pairwise_distances_in_component(sample);
+    if (dists.empty()) return 0;
+    return *ranges::max_element(dists);
 }
 
 size_t graph_analyzer::estimate_90th_percentile_of_max_CC_from_sample(const int sample_size) {
-    ensure_landmarks_built();
     const auto max_cc = get_max_CC();
-    if (max_cc.empty()) return 0;
+    if (max_cc.empty()) return 0.0;
 
     const int k = min(sample_size, static_cast<int>(max_cc.size()));
     const auto sample = other::get_random_n_elements(max_cc, k);
-
-    vector<int> dists;
-    dists.reserve(k * (k - 1) / 2);
-    for (size_t i = 0; i < sample.size(); ++i) {
-        for (size_t j = i + 1; j < sample.size(); ++j) {
-            if (int est = estimate_distance(sample[i], sample[j]); est >= 0) dists.push_back(est);
-        }
-    }
-    if (dists.empty()) return 0;
+    auto dists = pairwise_distances_in_component(sample);
+    if (dists.empty()) return 0.0;
 
     ranges::sort(dists);
     const size_t idx = (dists.size() - 1) * 9 / 10;
@@ -816,6 +730,74 @@ set<int> graph_analyzer::build_snowball_sample(const int target_size) {
     return sample;
 }
 
+unordered_map<int, int> graph_analyzer::get_distances_in_subset(
+    const int v, const set<int>& allowed)
+{
+    unordered_map<int, int> dist;
+    queue<int> q;
+    if (!allowed.contains(v)) return dist;
+
+    dist[v] = 0;
+    q.push(v);
+
+    if (g.type == Directed && rg.empty())
+        rg = g.get_reversed();
+
+    while (!q.empty()) {
+        int cur = q.front(); q.pop();
+        for (int to : g[cur]) {
+            if (allowed.contains(to) && !dist.contains(to)) {
+                dist[to] = dist[cur] + 1;
+                q.push(to);
+            }
+        }
+        if (g.type == Directed) {
+            for (int to : rg[cur]) {
+                if (allowed.contains(to) && !dist.contains(to)) {
+                    dist[to] = dist[cur] + 1;
+                    q.push(to);
+                }
+            }
+        }
+    }
+    return dist;
+}
+
+vector<int> graph_analyzer::pairwise_distances_in_component(
+    const vector<int>& sample)
+{
+    vector<int> result;
+    const size_t k = sample.size();
+    result.reserve(k * (k - 1) / 2);
+    for (size_t i = 0; i < k; ++i) {
+        auto dist_map = get_distances_from(sample[i]);
+        for (size_t j = i + 1; j < k; ++j) {
+            if (auto it = dist_map.find(sample[j]); it != dist_map.end()) {
+                result.push_back(it->second);
+            }
+        }
+    }
+    return result;
+}
+
+vector<int> graph_analyzer::pairwise_distances_in_subset(
+    const set<int>& subset)
+{
+    const vector vertices(subset.begin(), subset.end());
+    vector<int> result;
+    const size_t n = vertices.size();
+    result.reserve(n * (n - 1) / 2);
+    for (size_t i = 0; i < n; ++i) {
+        auto dmap = get_distances_in_subset(vertices[i], subset);
+        for (size_t j = i + 1; j < n; ++j) {
+            if (auto it = dmap.find(vertices[j]); it != dmap.end()) {
+                result.push_back(it->second);
+            }
+        }
+    }
+    return result;
+}
+
 void graph_analyzer::remove_vertex(const int v) {
     if (!g.contains(v)) return;
     if (g.type == Undefined) throw runtime_error("remove_vertex: graph type is undefined");
@@ -842,34 +824,20 @@ void graph_analyzer::remove_vertex(const int v) {
 }
 
 size_t graph_analyzer::estimate_diameter_of_max_CC_from_snowball(const int target_size) {
-    ensure_landmarks_built();
-    auto snowball = build_snowball_sample(target_size);
+    const auto snowball = build_snowball_sample(target_size);
     if (snowball.size() < 2) return 0;
 
-    const vector vertexes(snowball.begin(), snowball.end());
-    size_t diameter = 0;
-    for (size_t i = 0; i < vertexes.size(); ++i) {
-        for (size_t j = i + 1; j < vertexes.size(); ++j) {
-            if (const int est = estimate_distance(vertexes[i], vertexes[j]); est > static_cast<int>(diameter)) diameter = est;
-        }
-    }
-    return diameter;
+    auto dists = pairwise_distances_in_subset(snowball);
+    if (dists.empty()) return 0;
+    return *ranges::max_element(dists);
 }
 
 size_t graph_analyzer::estimate_90th_percentile_of_max_CC_from_snowball(const int target_size) {
-    ensure_landmarks_built();
-    auto snowball = build_snowball_sample(target_size);
-    if (snowball.size() < 2) return 0;
+    const auto snowball = build_snowball_sample(target_size);
+    if (snowball.size() < 2) return 0.0;
 
-    const vector vertexes(snowball.begin(), snowball.end());
-    vector<int> dists;
-    dists.reserve(vertexes.size() * (vertexes.size() - 1) / 2);
-    for (size_t i = 0; i < vertexes.size(); ++i) {
-        for (size_t j = i + 1; j < vertexes.size(); ++j) {
-            if (int est = estimate_distance(vertexes[i], vertexes[j]); est >= 0) dists.push_back(est);
-        }
-    }
-    if (dists.empty()) return 0;
+    auto dists = pairwise_distances_in_subset(snowball);
+    if (dists.empty()) return 0.0;
 
     ranges::sort(dists);
     const size_t idx = (dists.size() - 1) * 9 / 10;
